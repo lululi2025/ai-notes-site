@@ -1,12 +1,182 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Notes Site</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Notes</title>
+  <meta name="description" content="AI 使用案例分享與學習筆記" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf6f1;
+      --bg-warm: #f5ede4;
+      --surface: #ffffff;
+      --ink: #3b2e20;
+      --ink-2: #5c4a3a;
+      --ink-3: #8c7b6b;
+      --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08);
+      --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040;
+      --caramel-light: rgba(192,128,64,0.10);
+      --caramel-mid: rgba(192,128,64,0.22);
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', 'Noto Sans TC', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      padding: 4rem 1.5rem 2.5rem;
+    }
+
+    header h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 400;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 0.75rem;
+      font-size: 1.05rem;
+      color: var(--ink-3);
+      font-weight: 300;
+    }
+
+    /* ── Notes Grid ── */
+    main {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+      flex: 1;
+    }
+
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .note-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .note-card:hover {
+      border-color: var(--caramel-mid);
+      box-shadow: 0 4px 20px rgba(90,60,30,0.06);
+      transform: translateY(-2px);
+    }
+
+    .note-icon {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--caramel-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .note-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .note-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 0.35rem;
+    }
+
+    .note-desc {
+      font-size: 0.9rem;
+      color: var(--ink-3);
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    .note-arrow {
+      flex-shrink: 0;
+      color: var(--ink-4);
+      font-size: 1.2rem;
+      transition: transform 0.2s ease;
+    }
+
+    .note-card:hover .note-arrow {
+      transform: translateX(4px);
+      color: var(--caramel);
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.82rem;
+      color: var(--ink-4);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Empty State ── */
+    .empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--ink-4);
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
-    <h1>AI Notes Site</h1>
-    <p>Welcome! This site is under construction.</p>
+
+  <header>
+    <h1>AI Notes</h1>
+    <p>AI 使用案例分享與學習筆記</p>
+  </header>
+
+  <main>
+    <div class="notes-list">
+
+      <a class="note-card" href="engenius-brand-guide.html">
+        <div class="note-icon">🎨</div>
+        <div class="note-info">
+          <div class="note-title">用 AI 建立 EnGenius 品牌視覺規範文檔</div>
+          <div class="note-desc">從複雜規格到精簡 Branding Guide 的迭代過程</div>
+        </div>
+        <div class="note-arrow">&rarr;</div>
+      </a>
+
+    </div>
+  </main>
+
+  <footer>
+    Built with AI &middot; Lulu's Notes
+  </footer>
+
 </body>
 </html>
