@@ -70,8 +70,10 @@
       padding: 0 0 60px;
     }
 
+    .sidebar-home { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); text-decoration: none; padding: 14px 28px 0; transition: color .15s; }
+    .sidebar-home:hover { color: var(--caramel); }
     .sidebar-top {
-      padding: 36px 28px 28px;
+      padding: 20px 28px 28px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 8px;
     }
@@ -475,6 +477,7 @@
 
   <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
   <nav class="sidebar" id="sidebar">
+    <a class="sidebar-home" href="./">&larr; AI Notes</a>
     <div class="sidebar-top">
       <div class="sidebar-eyebrow">AI 協作案例</div>
       <h2>用 AI 建立 EnGenius 品牌視覺規範文檔</h2>
