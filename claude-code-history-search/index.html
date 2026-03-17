@@ -27,7 +27,9 @@
     body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
     .layout { display: flex; min-height: 100vh; width: 100%; }
     .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
-    .sidebar-top { padding: 36px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-home { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); text-decoration: none; padding: 14px 28px 0; transition: color .15s; }
+    .sidebar-home:hover { color: var(--caramel); }
+    .sidebar-top { padding: 20px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
     .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
     .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
     .nav-section { padding: 0 18px; }
@@ -111,6 +113,7 @@
 <div class="layout">
 
   <nav class="sidebar" id="sidebar">
+    <a class="sidebar-home" href="../">&larr; AI Notes</a>
     <div class="sidebar-top">
       <div class="sidebar-eyebrow">工具使用</div>
       <h2>如何找回 Claude Code 的對話紀錄</h2>
