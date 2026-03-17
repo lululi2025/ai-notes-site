@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firebase Google 登入在 Cloudflare Pages 無反應的解法</title>
+  <meta name="description" content="部署到 Cloudflare Pages 後，點 Google 登入沒反應——症狀描述、根本原因、修復步驟，以及功能延伸的可行性評估。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-top { padding: 36px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--caramel-light); color: var(--ink-2); padding: 2px 7px; border-radius: 5px; }
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+    .table-wrap { overflow-x: auto; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: var(--espresso); color: var(--cream); font-weight: 500; padding: 12px 18px; text-align: left; font-size: 12px; letter-spacing: .06em; }
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; line-height: 1.7; }
+    pre { border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 24px; font-size: 13px; line-height: 1.7; background: var(--surface-warm); border: 1px solid var(--border); padding: 20px 24px; }
+    pre code { background: none; color: var(--ink-2); padding: 0; font-size: inherit; border-radius: 0; }
+    .callout { display: flex; gap: 14px; padding: 18px 22px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 15px; line-height: 1.75; border-left: 3px solid; }
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+    .route-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .route-card { background: var(--surface); padding: 24px 22px; position: relative; border: 1px solid var(--border); border-radius: var(--radius-sm); transition: box-shadow .2s; }
+    .route-card:hover { box-shadow: 0 4px 16px rgba(90,60,30,0.08); }
+    .route-card.featured { border-color: var(--caramel); }
+    .route-tag { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--caramel); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+    .route-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+    .route-sub { font-size: 12px; color: var(--ink-4); margin-bottom: 14px; }
+    .pros-cons { list-style: none; padding: 0; font-size: 13px; color: var(--ink-3); }
+    .pros-cons li { margin-bottom: 6px; padding-left: 18px; position: relative; }
+    .pros-cons .pro::before { content: "✓"; position: absolute; left: 0; color: #6b9e6b; }
+    .pros-cons .con::before { content: "—"; position: absolute; left: 0; color: var(--ink-4); }
+    .rec-badge { position: absolute; top: 14px; right: 14px; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: var(--caramel); color: #fff; padding: 3px 10px; border-radius: 100px; }
+    .bug-block { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; }
+    .bug-header { background: var(--espresso); padding: 13px 22px; display: flex; align-items: center; gap: 12px; }
+    .bug-icon { font-size: 14px; color: #e8c97a; }
+    .bug-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: #e8c97a; letter-spacing: .03em; }
+    .bug-body { background: var(--surface); padding: 22px 24px; }
+    .takeaway { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--caramel); border-radius: var(--radius-sm); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 130px; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .route-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">問題解決 · Coding</div>
+      <h2>Firebase Google 登入在 Cloudflare Pages 無反應的解法</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">內容</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>問題描述</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>根本原因</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>解決步驟</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>功能延伸可行性</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">問題解決型 · Firebase × Cloudflare</span>
+      </div>
+      <h1>Firebase Google 登入在 Cloudflare Pages 無反應</h1>
+      <p class="hero-desc">部署成功、畫面正常——但點了「用 Google 帳號登入」卻完全沒反應。這篇記錄如何用一句症狀描述讓 AI 快速鎖定根本原因，並順帶評估下一步功能的可行性。</p>
+      <div class="hero-meta">
+        <span>2026-03-17</span>
+        <span class="hero-meta-dot"></span>
+        <span>問題解決型</span>
+      </div>
+    </header>
+
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">描述「點 Google 登入沒反應」的症狀，讓 AI 診斷 Firebase 授權域名缺失的根本原因，並取得逐步修復指引</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">需要自己翻 Firebase 文件、逐一排查（console 錯誤 → 授權域名 → 防彈窗設定），可能花 30–60 分鐘才能定位問題</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">3 分鐘內取得明確解法：在 Firebase Console 新增 Cloudflare Pages 域名到授權清單即可修復</span>
+      </div>
+    </div>
+
+    <!-- S1 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">問題描述</h2>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：點 Google 登入按鈕，完全沒反應</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>旅遊 App 部署到 Cloudflare Pages 後，點擊「用 Google 帳號登入」按鈕，頁面完全沒有任何回應——沒有 popup、沒有跳轉、沒有錯誤訊息。</div>
+          </div>
+          <p><strong>環境：</strong>React + Firebase Authentication（Google 登入），部署在 Cloudflare Pages（例如 <code>travel-app-xxx.pages.dev</code>）。</p>
+          <p><strong>容易誤判的方向：</strong>因為沒有明顯錯誤，容易以為是按鈕的 onClick 沒有綁定，或是瀏覽器 popup 被封鎖——但其實兩者都不是根本原因。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S2 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">根本原因</h2>
+      </div>
+
+      <p>Firebase Authentication 有一套<strong>授權域名白名單</strong>機制：只有列在白名單內的域名，才允許發起 OAuth 登入流程。</p>
+      <p>預設情況下，Firebase 只信任兩個域名：</p>
+      <ul>
+        <li><code>localhost</code>（本機開發用）</li>
+        <li><code>your-project-id.firebaseapp.com</code>（Firebase Hosting 用）</li>
+      </ul>
+      <p>當你把 App 部署到 Cloudflare Pages（<code>travel-app-xxx.pages.dev</code>），這個域名<strong>不在白名單內</strong>，Firebase 會靜默拒絕請求——不拋錯、不跳 popup、就是沒反應。</p>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>這個行為是 Firebase 的安全設計：未授權的域名發起 OAuth 請求時，Firebase 不會給出任何提示（避免洩漏資訊），所以從前端完全看不到錯誤。</div>
+      </div>
+    </section>
+
+    <!-- S3 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">解決步驟</h2>
+      </div>
+
+      <p>只需要把 Cloudflare Pages 的域名加入 Firebase 的授權清單，問題即可解決。</p>
+
+      <ol>
+        <li>進入 <strong>Firebase Console</strong> → 選擇你的專案</li>
+        <li>左側選單點 <strong>Authentication</strong></li>
+        <li>上方點 <strong>Settings（設定）</strong>分頁</li>
+        <li>找到 <strong>Authorized domains（授權網域）</strong>區塊</li>
+        <li>點 <strong>Add domain</strong></li>
+        <li>輸入你的 Cloudflare Pages 網址，例如：<code>travel-app-abc123.pages.dev</code></li>
+        <li>儲存後，回到 Cloudflare Pages 重新整理頁面，再試一次 Google 登入</li>
+      </ol>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>如果你有自訂域名</strong>（例如 <code>mytrip.com</code>），除了 <code>pages.dev</code> 那個，也要把自訂域名一起加進去，否則換域名後又會無法登入。</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>驗證方式：</strong>修改後回到網頁，點擊 Google 登入，應該會跳出 Google 帳號選擇的 popup。若 popup 被瀏覽器封鎖，通常網址列旁會出現「允許彈出視窗」的提示。</div>
+      </div>
+    </section>
+
+    <!-- S4 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">延伸討論：自動搜尋並新增景點的可行性</h2>
+      </div>
+
+      <p>修完登入問題後，順帶評估了一個新功能的可行性：能否讓 App 自動搜尋景點並加入現有行程？結論是<strong>完全可行</strong>，有三種主要技術路線：</p>
+
+      <div class="route-grid">
+        <div class="route-card featured">
+          <span class="rec-badge">實用首選</span>
+          <div class="route-tag">Option A</div>
+          <h4>Google Places API</h4>
+          <div class="route-sub">搜尋真實景點資料</div>
+          <ul class="pros-cons">
+            <li class="pro">資料準確（名稱、地址、評分、照片）</li>
+            <li class="pro">有免費額度，小規模使用成本低</li>
+            <li class="pro">整合方式成熟，文件豐富</li>
+            <li class="con">超出免費額度後需付費</li>
+            <li class="con">需申請 API Key 並設定帳單</li>
+          </ul>
+        </div>
+        <div class="route-card">
+          <div class="route-tag">Option B</div>
+          <h4>Claude / ChatGPT API</h4>
+          <div class="route-sub">AI 智慧推薦景點</div>
+          <ul class="pros-cons">
+            <li class="pro">自然語言輸入（「加一個拍照景點」）</li>
+            <li class="pro">彈性最大，可理解複雜需求</li>
+            <li class="con">知識截止日期，無法查詢即時資訊</li>
+            <li class="con">按 token 計費，成本較難預測</li>
+          </ul>
+        </div>
+        <div class="route-card">
+          <div class="route-tag">Option C</div>
+          <h4>兩者結合</h4>
+          <div class="route-sub">AI 理解需求 + Places 取真實資料</div>
+          <ul class="pros-cons">
+            <li class="pro">最完整的使用體驗</li>
+            <li class="pro">AI 處理模糊需求，Places 確保資料準確</li>
+            <li class="con">需串接兩個 API，架構較複雜</li>
+            <li class="con">兩個 API 都有費用</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>這個功能最終暫時擱置，不在本次開發範圍內。但評估過程確認了技術可行性，未來如有需要可以快速啟動。</div>
+      </div>
+    </section>
+
+    <!-- S5 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p><strong>症狀描述型提問</strong>的威力：你不需要懂根本原因，只需要把「做了什麼、看到什麼（或沒看到什麼）」描述清楚，AI 就能從現象反推技術原因。「點登入沒反應」這句話足以讓 AI 鎖定 Firebase 授權域名這個非常具體的問題。</p>
+        <p>同樣的方式也適用於功能可行性評估：用一句話說清楚你想做什麼，AI 可以快速拆解成多個技術路線並比較，讓你在動手前就能看清楚選擇。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">可移植性</div>
+        <div class="matrix-row">
+          <span class="matrix-key">任何 Firebase + 非 Firebase Hosting 的部署</span>
+          <span class="matrix-arrow">→</span>
+          <span>都需要手動新增授權域名（Netlify、Vercel、GitHub Pages 同理）</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">特殊條件</span>
+          <span class="matrix-arrow">→</span>
+          <span>只有使用 Firebase Hosting 部署才會自動完成這個設定</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也遇到類似問題，先問 AI</div>
+        <p><strong>起手式 Prompt 1（診斷問題）：</strong></p>
+        <pre><code>我的 React App 用 Firebase Authentication 做 Google 登入，
+在本機正常，但部署到 [平台名稱] 後，點登入按鈕沒有任何反應，
+也沒有錯誤訊息。可能是什麼原因？</code></pre>
+        <p><strong>起手式 Prompt 2（評估功能可行性）：</strong></p>
+        <pre><code>我想在現有的旅遊 App 裡加一個功能：用戶可以搜尋景點並自動加進行程。
+目前 App 是用 React + Firebase，有哪些技術方案可行？
+各自的費用和難度大概是什麼水準？</code></pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-17</strong></span>
+      <span>問題解決型 · Firebase × Cloudflare</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+  hljs.highlightAll();
+</script>
+</body>
+</html>
