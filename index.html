@@ -38,7 +38,7 @@
     /* ── Header ── */
     header {
       text-align: center;
-      padding: 4rem 1.5rem 2.5rem;
+      padding: 4rem 1.5rem 2rem;
     }
 
     header h1 {
@@ -56,7 +56,50 @@
       font-weight: 300;
     }
 
-    /* ── Notes Grid ── */
+    /* ── Filter Bar ── */
+    .filter-bar {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1.5rem 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.45rem 1rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      background: var(--surface);
+      color: var(--ink-3);
+      font-family: 'DM Sans', 'Noto Sans TC', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--caramel-mid);
+      color: var(--ink-2);
+    }
+
+    .filter-btn.active {
+      background: var(--caramel);
+      border-color: var(--caramel);
+      color: #fff;
+    }
+
+    .note-count {
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 1.5rem 1rem;
+      font-size: 0.82rem;
+      color: var(--ink-4);
+    }
+
+    /* ── Notes List ── */
     main {
       max-width: 860px;
       width: 100%;
@@ -75,13 +118,17 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.75rem 2rem;
+      padding: 1.5rem 1.75rem;
       text-decoration: none;
       color: inherit;
       transition: all 0.2s ease;
       display: flex;
-      align-items: center;
-      gap: 1.5rem;
+      align-items: flex-start;
+      gap: 1.25rem;
+    }
+
+    .note-card.hidden {
+      display: none;
     }
 
     .note-card:hover {
@@ -107,16 +154,50 @@
       min-width: 0;
     }
 
+    .note-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .note-date {
+      font-size: 0.78rem;
+      color: var(--ink-4);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note-tag {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    /* Tag colors */
+    .tag-branding    { background: #f3e8ff; color: #7c3aed; }
+    .tag-marketing   { background: #dbeafe; color: #2563eb; }
+    .tag-coding      { background: #d1fae5; color: #059669; }
+    .tag-writing     { background: #fef3c7; color: #b45309; }
+    .tag-research    { background: #ffe4e6; color: #e11d48; }
+    .tag-design      { background: #fce7f3; color: #db2777; }
+    .tag-workflow    { background: #e0e7ff; color: #4338ca; }
+    .tag-data        { background: #ccfbf1; color: #0d9488; }
+
     .note-title {
       font-family: 'Fraunces', serif;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 400;
       color: var(--ink);
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.3rem;
+      line-height: 1.4;
     }
 
     .note-desc {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       color: var(--ink-3);
       font-weight: 300;
       line-height: 1.5;
@@ -127,6 +208,7 @@
       color: var(--ink-4);
       font-size: 1.2rem;
       transition: transform 0.2s ease;
+      margin-top: 0.8rem;
     }
 
     .note-card:hover .note-arrow {
@@ -143,12 +225,11 @@
       border-top: 1px solid var(--border);
     }
 
-    /* ── Empty State ── */
-    .empty {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--ink-4);
-      font-style: italic;
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .note-card { padding: 1.25rem; gap: 1rem; }
+      .note-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+      .note-title { font-size: 1.05rem; }
     }
   </style>
 </head>
@@ -159,12 +240,45 @@
     <p>AI 使用案例分享與學習筆記</p>
   </header>
 
-  <main>
-    <div class="notes-list">
+  <!-- ── Category Filter ── -->
+  <nav class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="branding">Branding</button>
+    <button class="filter-btn" data-filter="marketing">Marketing</button>
+    <button class="filter-btn" data-filter="design">Design</button>
+    <button class="filter-btn" data-filter="coding">Coding</button>
+    <button class="filter-btn" data-filter="writing">Writing</button>
+    <button class="filter-btn" data-filter="research">Research</button>
+    <button class="filter-btn" data-filter="workflow">Workflow</button>
+    <button class="filter-btn" data-filter="data">Data</button>
+  </nav>
 
-      <a class="note-card" href="engenius-brand-guide.html">
+  <div class="note-count"><span id="count">1</span> notes</div>
+
+  <main>
+    <div class="notes-list" id="notesList">
+
+      <!--
+        ┌─────────────────────────────────────────────┐
+        │  HOW TO ADD A NEW NOTE:                      │
+        │  Copy a <a class="note-card"> block below,  │
+        │  update: data-category, date, tag class,     │
+        │  title, desc, and href.                      │
+        │                                              │
+        │  Available tag classes:                       │
+        │  tag-branding, tag-marketing, tag-coding,    │
+        │  tag-writing, tag-research, tag-design,      │
+        │  tag-workflow, tag-data                       │
+        └─────────────────────────────────────────────┘
+      -->
+
+      <a class="note-card" href="engenius-brand-guide.html" data-category="branding">
         <div class="note-icon">🎨</div>
         <div class="note-info">
+          <div class="note-meta">
+            <span class="note-date">2026-03-17</span>
+            <span class="note-tag tag-branding">Branding</span>
+          </div>
           <div class="note-title">用 AI 建立 EnGenius 品牌視覺規範文檔</div>
           <div class="note-desc">從複雜規格到精簡 Branding Guide 的迭代過程</div>
         </div>
@@ -177,6 +291,36 @@
   <footer>
     Built with AI &middot; Lulu's Notes
   </footer>
+
+  <script>
+    const buttons = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.note-card');
+    const countEl = document.getElementById('count');
+
+    function updateCount() {
+      const visible = document.querySelectorAll('.note-card:not(.hidden)').length;
+      countEl.textContent = visible;
+    }
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+
+        cards.forEach(card => {
+          if (filter === 'all' || card.dataset.category === filter) {
+            card.classList.remove('hidden');
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        updateCount();
+      });
+    });
+  </script>
 
 </body>
 </html>
