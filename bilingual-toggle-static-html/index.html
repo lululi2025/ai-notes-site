@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>靜態 HTML 雙語切換：從 data-i18n 到 iframe 同步全記錄</title>
+  <meta name="description" content="用 AI 為展覽活動網站加入中英文切換功能，並解決 iframe 語言同步與 JS 語法 bug 的完整過程。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-top { padding: 36px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--caramel-light); color: var(--ink-2); padding: 2px 7px; border-radius: 5px; }
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+    .table-wrap { overflow-x: auto; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: var(--espresso); color: var(--cream); font-weight: 500; padding: 12px 18px; text-align: left; font-size: 12px; letter-spacing: .06em; }
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; line-height: 1.7; }
+    pre { border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 24px; font-size: 13px; line-height: 1.7; background: var(--surface-warm); border: 1px solid var(--border); padding: 20px 24px; }
+    pre code { background: none; color: var(--ink-2); padding: 0; font-size: inherit; border-radius: 0; }
+    .callout { display: flex; gap: 14px; padding: 18px 22px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 15px; line-height: 1.75; border-left: 3px solid; }
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+    .tech-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .tech-pill { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+    .tech-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .bug-block { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; }
+    .bug-header { background: var(--espresso); padding: 13px 22px; display: flex; align-items: center; gap: 12px; }
+    .bug-icon { font-size: 14px; color: #e8c97a; }
+    .bug-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: #e8c97a; letter-spacing: .03em; }
+    .bug-body { background: var(--surface); padding: 22px 24px; }
+    .ai-role-card { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .ai-role-col { background: var(--surface); padding: 22px 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .ai-role-header { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .ai-role-ai .ai-role-header { color: var(--caramel); }
+    .ai-role-human .ai-role-header { color: #6b9e6b; }
+    .ai-role-col ul { padding-left: 0; list-style: none; margin: 0; }
+    .ai-role-col li { font-size: 14px; padding: 7px 0 7px 20px; position: relative; border-bottom: 1px solid var(--border); color: var(--ink-2); line-height: 1.6; }
+    .ai-role-col li:last-child { border-bottom: none; }
+    .ai-role-ai li::before { content: "◇"; position: absolute; left: 0; color: var(--caramel); font-size: 10px; top: 10px; }
+    .ai-role-human li::before { content: "◆"; position: absolute; left: 0; color: #6b9e6b; font-size: 10px; top: 10px; }
+    .takeaway { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--caramel); border-radius: var(--radius-sm); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 160px; }
+    .code-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .code-label { font-size: 12px; color: var(--ink-4); margin-bottom: 8px; font-weight: 500; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .code-compare { grid-template-columns: 1fr; }
+      .ai-role-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">AI 使用案例</div>
+      <h2>靜態 HTML 雙語切換<br>全記錄</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">內容</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>需求背景</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>i18n 系統架構</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>跨 iframe 語言同步</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>踩坑紀錄</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>AI vs 人分工</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">工具開發 × 問題解決</span>
+      </div>
+      <h1>靜態 HTML 雙語切換：<br>從 data-i18n 到 iframe 同步全記錄</h1>
+      <p class="hero-desc">一個展覽活動網站，兩個純 HTML 檔案，裡面全是 base64 圖片。<br>如何在不引入任何框架的情況下，加入中英文切換，並讓 iframe 裡的子頁面也跟著換語言？</p>
+      <div class="hero-meta">
+        <span>2026-03-18</span>
+        <span class="hero-meta-dot"></span>
+        <span>工具開發型 + 問題解決型</span>
+      </div>
+    </header>
+
+    <!-- Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">為 ISC West 2026 展覽活動網站（兩個純靜態 HTML 檔）加入中英文雙語切換功能，並解決 iframe 語言同步與 JavaScript 語法 bug</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">需要手動在 2–3MB 的 HTML 大檔中找到正確位置、逐一加入 data-i18n 屬性、撰寫 JS i18n 邏輯，以及自行設計 postMessage 跨 iframe 通訊機制，估計需要半天以上</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">兩頁面皆支援點一下切換中英文；語言偏好存於 localStorage；iframe 子頁面透過 postMessage 三層機制自動同步；已推上 GitHub 並部署</span>
+      </div>
+    </div>
+
+    <!-- Section 01 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">需求背景</h2>
+      </div>
+
+      <p>這是一個 ISC West 2026 展覽的工作人員行前說明網站，包含兩個純靜態 HTML 檔案：</p>
+      <ul>
+        <li><strong>index.html</strong>（主頁面）：行程表、素材清單、互動導覽入口</li>
+        <li><strong>booth.html</strong>（攤位互動導覽）：嵌在 index.html 的 iframe 中，是一個點選式的攤位介紹</li>
+      </ul>
+
+      <p>這兩個檔案各自嵌入了大量 base64 圖片，導致每個檔案都達到 2–3MB，無法用一般編輯器或 AI 的 Edit 工具直接修改（超過 token 上限）。所有大範圍文字替換都必須改用 Python 腳本執行。</p>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div><strong>限制條件：</strong>不能引入任何框架（Vue、React、i18next 等），只能使用原生 JavaScript。部署在 Cloudflare Pages（Direct Upload 模式），無伺服器端邏輯。</div>
+      </div>
+    </section>
+
+    <!-- Section 02 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">i18n 系統架構</h2>
+      </div>
+
+      <p>採用「data 屬性 + JS 字典」的輕量 i18n 方案，不依賴任何外部函式庫。</p>
+
+      <div class="subsection">
+        <div class="subsection-label">HTML 端：標記要翻譯的元素</div>
+        <p>在需要翻譯的 HTML 元素上加入 <code>data-i18n</code> 屬性，值為翻譯 key：</p>
+        <pre><code class="language-html">&lt;!-- 一般文字 --&gt;
+&lt;h2 data-i18n="section.schedule"&gt;展覽行程&lt;/h2&gt;
+
+&lt;!-- 包含 HTML 標籤的元素（例如 &lt;br&gt;）需加 data-i18n-html --&gt;
+&lt;h1 data-i18n="hero.title" data-i18n-html="1"&gt;
+  行前&lt;br&gt;&lt;span class="line2"&gt;懶人&lt;/span&gt;&lt;br&gt;&lt;span class="highlight"&gt;包&lt;/span&gt;
+&lt;/h1&gt;</code></pre>
+        <div class="callout callout-tip">
+          <span class="callout-icon">→</span>
+          <div>有無 <code>data-i18n-html</code> 屬性決定用 <code>textContent</code> 還是 <code>innerHTML</code> 設定翻譯值。前者更安全（防 XSS），後者允許 HTML 格式。</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">JS 端：翻譯字典與切換函式</div>
+        <pre><code class="language-javascript">// index.html 的翻譯字典（booth.html 中命名為 _b_i18n）
+const _i18n = {
+  zh: {
+    'hero.title': '行前&lt;br&gt;&lt;span class="line2"&gt;懶人&lt;/span&gt;&lt;br&gt;&lt;span class="highlight"&gt;包&lt;/span&gt;',
+    'section.schedule': '展覽行程',
+    'nav.booth': '互動導覽',
+    // ... 約 57 個 key
+  },
+  en: {
+    'hero.title': 'Pre-Event&lt;br&gt;&lt;span class="line2"&gt;Quick&lt;/span&gt;&lt;br&gt;&lt;span class="highlight"&gt;Guide&lt;/span&gt;',
+    'section.schedule': 'Schedule',
+    'nav.booth': 'Booth Tour',
+    // ...
+  }
+};
+
+let _curLang = localStorage.getItem('lang') || 'zh';
+
+function setLang(lang) {
+  _curLang = lang;
+  localStorage.setItem('lang', lang);
+
+  // 遍歷所有標記元素，套用對應翻譯
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = _i18n[lang][key];
+    if (val !== undefined) {
+      if (el.getAttribute('data-i18n-html')) el.innerHTML = val;
+      else el.textContent = val;
+    }
+  });
+
+  // 更新切換按鈕文字
+  const btn = document.getElementById('lang-toggle');
+  if (btn) btn.textContent = lang === 'zh' ? 'EN' : '中文';
+  document.documentElement.lang = lang === 'zh' ? 'zh-TW' : 'en';
+
+  // 通知 iframe 子頁面
+  const iframe = document.getElementById('booth-iframe');
+  if (iframe && iframe.contentWindow) {
+    try { iframe.contentWindow.postMessage({ lang: lang }, '*'); } catch(e) {}
+  }
+}
+
+function toggleLang() { setLang(_curLang === 'zh' ? 'en' : 'zh'); }
+document.addEventListener('DOMContentLoaded', () => setLang(_curLang));</code></pre>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">切換按鈕樣式（踩過的坑）</div>
+        <p>按鈕初版 CSS 用了白色文字、白色邊框——因為 nav 背景是白色，所以完全隱形。最終改為藍色：</p>
+        <pre><code class="language-css">#lang-toggle {
+  background: transparent;
+  border: 1.5px solid #0070cc;   /* 不要用 rgba(255,255,255,...) */
+  color: #0070cc;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .2s;
+}
+#lang-toggle:hover { background: #0070cc; color: #fff; }</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 03 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">跨 iframe 語言同步：三層機制</h2>
+      </div>
+
+      <p>booth.html 是以 iframe 的形式嵌入 index.html 的。語言切換時，需要通知 iframe 裡的 booth.html 同步切換。</p>
+
+      <p>單純在 <code>DOMContentLoaded</code> 時送 <code>postMessage</code> 並不可靠，因為 iframe 可能還沒載入完成。最終設計了三層機制，互相補位：</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>層次</th><th>觸發時機</th><th>作用</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>第一層：localStorage</strong></td>
+              <td>booth.html 自身載入時</td>
+              <td>直接從 localStorage 讀取語言，不依賴父頁面</td>
+            </tr>
+            <tr>
+              <td><strong>第二層：boothReady 握手</strong></td>
+              <td>booth.html DOMContentLoaded 後</td>
+              <td>向父頁面送出 <code>{boothReady: true}</code>；父頁面收到後再送語言</td>
+            </tr>
+            <tr>
+              <td><strong>第三層：resizeBoothIframe</strong></td>
+              <td>iframe onload 事件</td>
+              <td>調整高度同時補送一次語言設定</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">booth.html 端：發送 boothReady</div>
+        <pre><code class="language-javascript">// booth.html 的完整 i18n 初始化
+function _bSetLang(lang) {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = _b_i18n[lang] && _b_i18n[lang][key];
+    if (val !== undefined) {
+      if (el.getAttribute('data-i18n-html')) el.innerHTML = val;
+      else el.textContent = val;
+    }
+  });
+}
+
+// 接收父頁面的語言指令
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.lang) _bSetLang(e.data.lang);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  // 第一層：讀 localStorage
+  const lang = localStorage.getItem('lang') || 'zh';
+  _bSetLang(lang);
+  // 第二層：通知父頁面「我準備好了」
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ boothReady: true }, '*'); } catch(e) {}
+  }
+});</code></pre>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">index.html 端：接收 boothReady + resizeBoothIframe 補送</div>
+        <pre><code class="language-javascript">// 接收 boothReady，補送語言
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.boothReady) {
+    const iframe = document.getElementById('booth-iframe');
+    if (iframe && iframe.contentWindow) {
+      try { iframe.contentWindow.postMessage({ lang: _curLang }, '*'); } catch(ex) {}
+    }
+  }
+});
+
+// 第三層：resize 時補送
+function resizeBoothIframe(iframe) {
+  try {
+    var h = iframe.contentWindow.document.body.scrollHeight;
+    if (h && h > 400) iframe.style.height = h + 'px';
+  } catch(e) {}
+  try {
+    var lang = typeof _curLang !== 'undefined' ? _curLang : (localStorage.getItem('lang') || 'zh');
+    iframe.contentWindow.postMessage({ lang: lang }, '*');
+  } catch(e) {}
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 04 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">踩坑紀錄</h2>
+      </div>
+
+      <!-- Bug 1 -->
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug 1：語言切換按鈕隱形</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>按鈕加上去了，但在頁面上完全看不見，點也沒反應。</div>
+          </div>
+          <p><strong>根本原因：</strong>CSS 設定 <code>color: rgba(255,255,255,0.85)</code>、<code>border: 1.5px solid rgba(255,255,255,0.5)</code>，是白色在白色背景上。</p>
+          <pre><code class="language-css">/* ❌ 錯誤：白色文字＋白色邊框，在白色 nav 上消失 */
+color: rgba(255,255,255,0.85);
+border: 1.5px solid rgba(255,255,255,0.5);
+
+/* ✅ 修正：改用明確的藍色 */
+color: #0070cc;
+border: 1.5px solid #0070cc;</code></pre>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防：</strong>加按鈕時先確認父容器的背景色，避免使用半透明白色（常見於深色 nav 的設計，搬到淺色 nav 就悲劇）。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug 2 -->
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug 2：hero 大標題切英文沒反應</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>切換英文後，其他元素都換了，唯獨頁面最大的 h1 標題沒動。</div>
+          </div>
+          <p><strong>根本原因：</strong><code>data-i18n="hero.title"</code> 屬性已正確加在 h1 上，但 <code>_i18n</code> 字典的 zh 和 en 物件中都沒有 <code>hero.title</code> 這個 key。</p>
+          <pre><code class="language-javascript">// ❌ 字典缺少 hero.title key
+const _i18n = {
+  zh: { 'section.schedule': '展覽行程', /* ... */ },
+  en: { 'section.schedule': 'Schedule', /* ... */ }
+};
+
+// ✅ 補上 hero.title（包含 HTML 結構，因為有 &lt;br&gt; 和 &lt;span&gt;）
+const _i18n = {
+  zh: {
+    'hero.title': '行前&lt;br&gt;&lt;span class="line2"&gt;懶人&lt;/span&gt;&lt;br&gt;&lt;span class="highlight"&gt;包&lt;/span&gt;',
+  },
+  en: {
+    'hero.title': 'Pre-Event&lt;br&gt;&lt;span class="line2"&gt;Quick&lt;/span&gt;&lt;br&gt;&lt;span class="highlight"&gt;Guide&lt;/span&gt;',
+  }
+};</code></pre>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防：</strong>每加一個 <code>data-i18n</code> 屬性，立刻在字典兩個語言都加上對應 key，不要分兩步做。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bug 3 -->
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug 3：booth.html 所有語言切換完全失效（根本原因）</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>index.html 切換英文後，嵌入的 booth.html 所有文字都不換，完全沒反應。即使直接開 booth.html，也無法切換。</div>
+          </div>
+          <p><strong>根本原因：</strong>booth.html 的 <code>&lt;script&gt;</code> 區塊中，某個英文翻譯字串內有 ASCII 單引號（apostrophe，Unicode U+0027），但整個字串是用單引號包住的。這讓整個 script 標籤解析失敗，所有 JS 都不執行。</p>
+          <div class="code-compare">
+            <div>
+              <div class="code-label">❌ 錯誤（apostrophe 截斷字串）</div>
+              <pre><code class="language-javascript">'desc.core1': 'Search what you're
+looking for — with rules tailored
+to your environment.'
+// 在 you're 的 ' 處，JS 以為
+// 字串結束了 → 語法錯誤</code></pre>
+            </div>
+            <div>
+              <div class="code-label">✅ 修正（改用雙引號或避開縮寫）</div>
+              <pre><code class="language-javascript">'desc.core1': 'Search what you are
+looking for — with rules tailored
+to your environment.'
+// 最簡單：把縮寫展開</code></pre>
+            </div>
+          </div>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防方法（三選一）：</strong>
+              <ol style="margin-top: 8px;">
+                <li>英文翻譯統一用雙引號 <code>"..."</code> 包字串（不會與 HTML 屬性衝突）</li>
+                <li>在字串內的單引號前加反斜線：<code>you\'re</code></li>
+                <li>用 Template Literal：<code>`you're`</code></li>
+              </ol>
+            </div>
+          </div>
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>為什麼難排查：</strong>這種 JS 語法錯誤不會在 console 產生明確的 i18n 相關錯誤訊息，只會靜默失敗——所有函式都沒宣告成功，所有事件監聽器都沒掛上。表面看起來像「翻譯沒有觸發」，實際上是「整個 script 都沒跑」。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 05 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">AI vs 人 分工回顧</h2>
+      </div>
+
+      <div class="ai-role-card">
+        <div class="ai-role-col ai-role-ai">
+          <div class="ai-role-header">AI 負責</div>
+          <ul>
+            <li>設計 data-i18n + JS 字典方案的整體架構</li>
+            <li>撰寫 setLang / toggleLang / _bSetLang 函式</li>
+            <li>設計三層 postMessage 同步機制</li>
+            <li>用 Python 腳本對 2-3MB 大檔進行批次文字替換</li>
+            <li>逐字分析 JS 語法錯誤根本原因（追查 Unicode apostrophe）</li>
+            <li>撰寫所有 CSS 樣式（切換按鈕）</li>
+            <li>執行 git commit / push 流程</li>
+          </ul>
+        </div>
+        <div class="ai-role-col ai-role-human">
+          <div class="ai-role-header">人負責</div>
+          <ul>
+            <li>提供截圖說明「哪個地方沒有換成英文」</li>
+            <li>決定翻譯措辭是否道地自然</li>
+            <li>確認最終英文大標題為「Pre-Event Quick Guide」</li>
+            <li>確認 Cloudflare 部署方式（手動上傳）</li>
+            <li>提供贈品圖片路徑、素材圖片路徑</li>
+            <li>確認內容正確性（工作內容描述、功能說明等）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">關鍵轉折點</div>
+        <p>整個過程最關鍵的轉折是：<strong>直接用 Edit 工具改 2-3MB 的 HTML 檔案，超過 AI 的輸入限制</strong>。一開始試著用 Edit 工具逐行修改，失敗後改為「AI 寫 Python 腳本 → 執行腳本替換文字」的模式，這讓後續所有大量編輯都能順利進行。</p>
+        <p>第二個轉折是 booth.html 完全沒有語言切換反應——表面看起來像 postMessage 沒送到，但實際根因是整個 script 解析失敗。這是一個「靜默失敗」的 JS 語法 bug，透過逐步縮小範圍、最終檢查字串內容才找到。</p>
+      </div>
+    </section>
+
+    <!-- Section 06 -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示的思路</div>
+        <p>「用 data 屬性標記 + JS 字典翻譯」是靜態 HTML 頁面最輕量的 i18n 方案，不需要框架，不需要 build step，只需要在 HTML 元素加一個屬性、在 JS 維護一個翻譯字典。</p>
+        <p>postMessage 跨 iframe 同步的關鍵是「不只送一次」——要預防 iframe 還沒準備好就收到訊息的競態條件（race condition），設計多個觸發點互相補位（localStorage + boothReady 握手 + onload 補送）。</p>
+        <div class="matrix-row">
+          <span class="matrix-key">靜態頁面需要 i18n</span>
+          <span class="matrix-arrow">→</span>
+          <span>data-i18n + JS 字典，比 i18next 輕 100 倍</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">翻譯字串裡有縮寫</span>
+          <span class="matrix-arrow">→</span>
+          <span>用雙引號包字串，或把縮寫展開</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">iframe 語言同步</span>
+          <span class="matrix-arrow">→</span>
+          <span>localStorage + boothReady 握手 + onload 三層補位</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">HTML 大檔（含 base64）</span>
+          <span class="matrix-arrow">→</span>
+          <span>改用 Python 腳本執行文字替換</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">可移植性</div>
+        <p><strong>可以直接複製的情境：</strong>任何純靜態 HTML 頁面（單頁活動頁、說明文件、展示頁），不需要伺服器，不需要 npm install。</p>
+        <p><strong>特殊條件：</strong>本案例因為有 iframe 子頁面需要同步，所以額外設計了 postMessage 機制。如果只有單一頁面，只需要 setLang 函式 + data-i18n 屬性即可。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <p><strong>起手式 Prompt 1（建立架構）：</strong></p>
+        <pre><code class="language-text">我有一個純靜態 HTML 頁面，想加入中英文切換功能，不使用任何框架。
+請設計一個輕量方案，包含：
+1. HTML 元素的標記方式
+2. JS 翻譯字典結構
+3. localStorage 語言偏好持久化
+4. 切換按鈕 HTML 和 CSS</code></pre>
+        <p><strong>起手式 Prompt 2（解決 iframe 同步問題）：</strong></p>
+        <pre><code class="language-text">我的主頁面切換語言時，想同步通知 iframe 子頁面。
+iframe 有時候還沒載入完就收到 postMessage，怎麼設計才可靠？</code></pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-18</strong></span>
+      <span>工具開發型 + 問題解決型</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+  hljs.highlightAll();
+</script>
+</body>
+</html>
