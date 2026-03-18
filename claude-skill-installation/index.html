@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Skill 安裝全攻略：四個平台、三種格式、一次搞懂</title>
+  <meta name="description" content="用 AI 拆解 Claude Skill 在 Claude.ai、Claude Code、Claude Desktop、API 四個平台的安裝差異，從一個 sync-context skill 的實際安裝過程學到完整知識。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-home { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); text-decoration: none; padding: 14px 28px 0; transition: color .15s; }
+    .sidebar-home:hover { color: var(--caramel); }
+    .sidebar-top { padding: 20px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    ul, ol { margin-bottom: 16px; padding-left: 24px; color: var(--ink-2); }
+    li { margin-bottom: 6px; line-height: 1.75; }
+    .table-wrap { overflow-x: auto; margin-bottom: 28px; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead { background: var(--bg-warm); }
+    th { text-align: left; padding: 14px 20px; font-weight: 600; color: var(--ink); border-bottom: 1px solid var(--border-strong); font-size: 13px; letter-spacing: .02em; }
+    td { padding: 12px 20px; border-bottom: 1px solid var(--border); color: var(--ink-2); vertical-align: top; line-height: 1.7; }
+    tr:last-child td { border-bottom: none; }
+    pre { background: #1e1e1e; border-radius: var(--radius); padding: 20px 24px; overflow-x: auto; margin-bottom: 24px; font-size: 13.5px; line-height: 1.65; }
+    code { font-family: var(--mono); font-size: 0.9em; }
+    p code, li code, td code { background: var(--caramel-light); padding: 2px 7px; border-radius: 4px; font-size: 0.88em; color: var(--espresso); }
+    .callout { display: flex; gap: 14px; padding: 16px 20px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 15px; line-height: 1.7; }
+    .callout-icon { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-top: 2px; }
+    .callout-tip { background: var(--caramel-light); border-left: 3px solid var(--caramel); }
+    .callout-tip .callout-icon { background: var(--caramel); color: #fff; }
+    .callout-note { background: rgba(90,60,30,0.03); border-left: 3px solid var(--ink-4); }
+    .callout-note .callout-icon { background: var(--ink-4); color: #fff; }
+    blockquote { border-left: 3px solid var(--latte); padding: 4px 0 4px 20px; margin-bottom: 20px; font-style: italic; color: var(--ink-3); font-size: 15px; }
+    .tree-block { background: var(--espresso); color: var(--cream); font-family: var(--mono); font-size: 13px; padding: 20px 24px; border-radius: var(--radius); line-height: 2; margin-bottom: 24px; overflow-x: auto; }
+    .tq { color: #f5c77e; } .ta { color: #98d4a0; } .tc { color: #e49090; }
+    .bug-block { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 28px; }
+    .bug-header { background: var(--espresso); color: var(--cream); padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
+    .bug-icon { font-size: 16px; }
+    .bug-body { padding: 20px; background: var(--surface); }
+    .ai-role-card { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 28px; }
+    .ai-role-col { padding: 20px 24px; }
+    .ai-role-ai { background: rgba(192,128,64,0.06); }
+    .ai-role-human { background: var(--surface); border-left: 1px solid var(--border); }
+    .ai-role-header { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px; }
+    .ai-role-ai .ai-role-header { color: var(--caramel); }
+    .ai-role-human .ai-role-header { color: var(--ink-3); }
+    .ai-role-col ul { padding-left: 18px; font-size: 14px; }
+    .ai-role-col li { margin-bottom: 6px; color: var(--ink-2); }
+    .takeaway { border-top: 3px solid var(--caramel); background: var(--surface-warm); padding: 28px; border-radius: 0 0 var(--radius) var(--radius); margin-bottom: 28px; }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: center; gap: 10px; font-size: 14px; margin-bottom: 8px; }
+    .matrix-key { font-weight: 600; color: var(--ink); min-width: 100px; }
+    .matrix-arrow { color: var(--caramel); font-weight: 600; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .ai-role-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <a class="sidebar-home" href="../">&larr; AI Notes</a>
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">AI 使用案例</div>
+      <h2>Claude Skill 安裝全攻略</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">章節</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>什麼是 Claude Skill</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>Skill 的核心結構</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>四個平台安裝比較</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>實作：安裝 sync-context</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>常見踩坑點</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>AI 協作回顧</a>
+        <a class="nav-link" href="#s7"><span class="nav-num">07</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+    <header class="hero">
+      <div class="hero-eyebrow"><span class="eyebrow-text">概念學習 + AI 協作</span></div>
+      <h1>Claude Skill 安裝全攻略：四個平台、三種格式、一次搞懂</h1>
+      <p class="hero-desc">從一個 sync-context skill 的實際安裝過程，拆解 Claude Skill 在不同平台的安裝差異，搞清楚「到底該把 skill 放在哪裡」這個讓人困惑的問題。</p>
+      <div class="hero-meta">
+        <span>2026-03-18</span>
+        <span class="hero-meta-dot"></span>
+        <span>概念學習 + AI 協作</span>
+      </div>
+    </header>
+
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">讓 AI 解釋一個 skill 的用途，嘗試安裝它，並在過程中釐清 Claude Skill 在四個不同平台的安裝方式差異</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">需要自行翻閱 Anthropic 官方文件、Claude Code docs、多篇社群教學，拼湊出完整圖片，估計 1-2 小時</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">搞懂了 Skill 在 Claude.ai / Claude Code / Claude Desktop / API 的安裝格式與路徑差異，並成功打包了一個 .skill 檔案</span>
+      </div>
+    </div>
+
+    <!-- S1 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">什麼是 Claude Skill</h2>
+      </div>
+      <p>Claude Skill 是一種模組化的擴充能力，透過一組結構化的指令、腳本和資源檔，教會 Claude 處理特定任務。可以把它想成「外掛」或「食譜」— 它不是給 Claude 新工具（那是 MCP 的工作），而是教 Claude <strong>怎麼用已有的工具去完成特定工作流程</strong>。</p>
+      <p>舉例來說，一個 <code>sync-context</code> skill 會教 Claude：當使用者說「同步進度」時，去掃描 git log、檢查目錄結構、讀取現有的 CLAUDE.md，然後生成或更新一份專案交接文件。</p>
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div>一個好的類比：<strong>MCP 是廚房裡的鍋碗瓢盆（工具），Skill 是食譜（怎麼用工具做出一道菜）</strong>。兩者可以搭配使用，但很多時候只有 Skill 就夠了。</div>
+      </div>
+    </section>
+
+    <!-- S2 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">Skill 的核心結構</h2>
+      </div>
+      <p>不管在哪個平台，<strong>Skill 的核心結構都是一樣的</strong>。最小可用的 skill 就是一個資料夾裡放一個 <code>SKILL.md</code> 檔案：</p>
+      <div class="tree-block">
+        <span class="tq">skill-name/</span><br>
+        ├── <span class="ta">SKILL.md</span> ← 必要，主指令檔<br>
+        └── <span class="tc">附加資源（選用）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;├── scripts/ &nbsp;&nbsp;← 可執行腳本<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;├── references/ ← 參考文件<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;└── assets/ &nbsp;&nbsp;&nbsp;← 模板、圖片等
+      </div>
+      <div class="subsection">
+        <div class="subsection-label">SKILL.md 的組成</div>
+        <p><code>SKILL.md</code> 包含兩個部分：<strong>YAML frontmatter</strong>（名稱 + 觸發描述）和 <strong>Markdown 本體</strong>（具體指令）。frontmatter 的 <code>description</code> 欄位至關重要 — 它決定了 Claude 什麼時候會觸發這個 skill。</p>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label">三層漸進式載入</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>層級</th><th>內容</th><th>何時載入</th><th>大小建議</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Metadata</strong></td><td>name + description</td><td>永遠在 context 中</td><td>~100 words</td></tr>
+            <tr><td><strong>SKILL.md 本體</strong></td><td>完整指令</td><td>觸發時才載入</td><td>&lt;500 行</td></tr>
+            <tr><td><strong>附加資源</strong></td><td>scripts, references, assets</td><td>需要時才讀取</td><td>無限制</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>這意味著你可以裝很多 skill 而不會拖慢 Claude — 每個 skill 平時只佔約 100 tokens 的 metadata。只有真正用到的 skill 才會完整載入。</div>
+      </div>
+    </section>
+
+    <!-- S3 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">四個平台安裝比較</h2>
+      </div>
+      <p>這是最容易搞混的部分。Claude 有四個不同的產品，都支援 Skill，但安裝方式不同：</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>平台</th><th>安裝格式</th><th>安裝位置</th><th>特色</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Claude.ai</strong>（網頁版）</td><td><code>.skill</code> 檔（ZIP）</td><td>Settings → Customize → Skills</td><td>透過 UI 上傳，跨 session 保留</td></tr>
+            <tr><td><strong>Claude Code</strong>（CLI）</td><td>資料夾 + SKILL.md</td><td><code>.claude/skills/</code> 目錄</td><td>可 git 追蹤，團隊共享</td></tr>
+            <tr><td><strong>Claude Desktop</strong>（桌面 App）</td><td><code>.skill</code> 檔（ZIP）</td><td>App Settings 內上傳</td><td>同 Claude.ai 格式，可搭配 MCP</td></tr>
+            <tr><td><strong>Claude API</strong>（程式化）</td><td>ZIP / 字串 / skill_id</td><td>API 請求的 container 參數</td><td>最彈性，支援多種格式</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label">Claude Code 的路徑層級</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>路徑</th><th>作用範圍</th><th>適用情境</th></tr></thead>
+          <tbody>
+            <tr><td><code>~/.claude/skills/skill-name/</code></td><td>個人全域，所有專案可用</td><td>通用工具型 skill</td></tr>
+            <tr><td><code>./project/.claude/skills/skill-name/</code></td><td>僅限該專案</td><td>專案特定的 conventions、workflows</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>最容易搞混的點</strong>：Claude.ai 和 Claude Desktop 都用 <code>.skill</code>（ZIP）格式，Claude Code 用資料夾。如果有人說「Claude 的 skill 要打包成 ZIP」，他們說的是 Claude.ai / Desktop，不是 Claude Code。</div>
+      </div>
+    </section>
+
+    <!-- S4 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">實作：安裝 sync-context skill</h2>
+      </div>
+      <p>這次對話中，我們實際操作了一個 <code>sync-context</code> skill 的安裝。這個 skill 的功能是在多次 AI session 之間保留專案進度，透過維護一份 <code>CLAUDE.md</code> 檔案來當作交接文件。</p>
+      <div class="subsection">
+        <div class="subsection-label">在 Claude.ai 網頁環境中的嘗試</div>
+      </div>
+      <pre><code class="language-bash"># 在 Claude.ai 對話環境中執行
+mkdir -p /mnt/skills/user/sync-context
+cp /mnt/user-data/uploads/SKILL.md /mnt/skills/user/sync-context/SKILL.md</code></pre>
+      <p>指令成功了，檔案也確實出現了。但關鍵問題是：<code>/mnt/skills/user/</code> 是 Claude.ai 雲端環境中的<strong>暫存檔案系統</strong>，session 結束就會重置。所以這個「安裝」是暫時的。</p>
+      <div class="subsection">
+        <div class="subsection-label">打包成 .skill 檔</div>
+      </div>
+      <p>為了永久安裝到 Claude.ai，需要打包成 <code>.skill</code> 檔（ZIP 格式），然後透過 Settings UI 上傳。</p>
+      <div class="subsection">
+        <div class="subsection-label">這個 skill 該裝在哪？</div>
+      </div>
+      <p>因為 <code>sync-context</code> 的核心功能是讀寫本機檔案和執行 git 指令，它最適合放在 <strong>Claude Code</strong> 的 <code>.claude/skills/</code> 目錄。在 Claude.ai 網頁版雖然能觸發，但因為沒有持久的本機檔案系統，寫出來的 CLAUDE.md 下次 session 就消失了。</p>
+      <div class="tree-block">
+        <span class="tq">選哪個平台？</span><br>
+        ├── <span class="tq">需要讀寫本機檔案？</span><br>
+        │&nbsp;&nbsp;&nbsp;├── <span class="ta">是 → Claude Code（最佳）或 Claude Desktop + MCP</span><br>
+        │&nbsp;&nbsp;&nbsp;└── <span class="ta">否 → Claude.ai 就夠了</span><br>
+        └── <span class="tq">需要團隊共享？</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="ta">是 → Claude Code（放專案 repo 裡）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="tc">否 → 任一平台皆可</span>
+      </div>
+    </section>
+
+    <!-- S5 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">常見踩坑點</h2>
+      </div>
+      <div class="bug-block">
+        <div class="bug-header"><span class="bug-icon">⚠</span><span class="bug-title">以為在 Claude.ai 對話中安裝就是永久安裝</span></div>
+        <div class="bug-body">
+          <div class="callout callout-note"><span class="callout-icon">!</span><div><strong>症狀：</strong>用 <code>cp</code> 把 SKILL.md 放到 <code>/mnt/skills/user/</code>，看起來成功了，但下次開新對話 skill 就不見了。</div></div>
+          <p><strong>根本原因：</strong>Claude.ai 的對話環境是暫存的，每次 session 都會重置。要永久保留，必須透過 Settings UI 上傳 <code>.skill</code> 檔。</p>
+          <div class="callout callout-tip"><span class="callout-icon">→</span><div><strong>預防：</strong>記住「在對話中操作檔案 ≠ 永久安裝」。永久安裝一律透過 UI 或本機檔案系統。</div></div>
+        </div>
+      </div>
+      <div class="bug-block">
+        <div class="bug-header"><span class="bug-icon">⚠</span><span class="bug-title">ZIP 打包格式錯誤</span></div>
+        <div class="bug-body">
+          <div class="callout callout-note"><span class="callout-icon">!</span><div><strong>症狀：</strong>上傳 <code>.skill</code> 檔後，Claude 無法讀取或觸發。</div></div>
+          <p><strong>根本原因：</strong>ZIP 根目錄必須是 skill 的資料夾名稱，不能直接把 SKILL.md 放在 ZIP 根目錄。</p>
+          <div class="callout callout-tip"><span class="callout-icon">→</span><div><strong>預防：</strong>壓縮時選「壓縮資料夾」而非「壓縮資料夾裡的檔案」。或用打包腳本自動處理。</div></div>
+        </div>
+      </div>
+      <div class="bug-block">
+        <div class="bug-header"><span class="bug-icon">⚠</span><span class="bug-title">Skill 裝了但不觸發</span></div>
+        <div class="bug-body">
+          <div class="callout callout-note"><span class="callout-icon">!</span><div><strong>症狀：</strong>安裝了 skill 但怎麼問都不觸發。</div></div>
+          <p><strong>根本原因：</strong>YAML frontmatter 的 <code>description</code> 寫得太模糊，或問題太簡單，Claude 認為不需要 skill。</p>
+          <div class="callout callout-tip"><span class="callout-icon">→</span><div><strong>預防：</strong>description 要寫得具體且「推進」— 明確列出觸發短語，例如「Use this skill whenever the user says '同步進度', '更新 CLAUDE.md'...」</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S6 -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">AI 協作回顧</h2>
+      </div>
+      <p>這次對話展示了一個典型的「從實作中學概念」的 AI 使用模式。不是先讀完所有文件再動手，而是直接嘗試安裝一個 skill，在碰壁的過程中自然地學到了完整知識。</p>
+      <div class="ai-role-card">
+        <div class="ai-role-col ai-role-ai">
+          <div class="ai-role-header">AI 負責</div>
+          <ul>
+            <li>解讀 SKILL.md 的用途和結構</li>
+            <li>嘗試在對話環境中安裝 skill</li>
+            <li>搜尋官方文件整理平台差異</li>
+            <li>打包 .skill 檔案</li>
+            <li>產出視覺化比較圖</li>
+          </ul>
+        </div>
+        <div class="ai-role-col ai-role-human">
+          <div class="ai-role-header">人負責</div>
+          <ul>
+            <li>上傳 SKILL.md 檔案</li>
+            <li>提出關鍵問題推動探索</li>
+            <li>糾正 AI 的錯誤認知</li>
+            <li>判斷 skill 的適用場景</li>
+          </ul>
+        </div>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label">關鍵轉折點</div>
+        <p>最重要的推進來自使用者的一個糾正：當 AI 說「我沒辦法幫你安裝」時，使用者反問「你不是可以用 copy to skill 嗎？」— 這促使 AI 實際嘗試了指令，結果成功了。這引出了更深的問題：<strong>安裝成功 ≠ 永久生效</strong>，進而觸發了對暫存 vs 永久檔案系統的完整討論。</p>
+      </div>
+      <div class="subsection">
+        <div class="subsection-label">提問模式：層層拆解型</div>
+        <p>這次對話的提問節奏：先從「這是什麼」開始 → 「怎麼安裝」→ 碰到問題後追問「為什麼不行」→ 最後擴展到「不同地方有什麼差異」。每一步都建立在前一步的理解之上。</p>
+      </div>
+    </section>
+
+    <!-- S7 -->
+    <section class="section" id="s7">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+      <div class="takeaway">
+        <div class="takeaway-label">核心收穫</div>
+        <p><strong>這個案例展示了什麼：</strong>透過「邊做邊問」的方式用 AI 學習新工具，比先讀完文件再動手更有效率。AI 在嘗試過程中犯的錯（以為暫存安裝是永久的）反而成了最好的教學素材。</p>
+        <p style="margin-top:16px"><strong>可移植性：</strong>這個「從實作出發」的學習模式適用於任何新工具或新框架。上傳你手邊有的檔案，讓 AI 解釋它、嘗試用它、在過程中自然學到周邊知識。特殊條件是需要 Claude.ai 的 Code Execution 功能開啟。</p>
+        <p style="margin-top:16px"><strong>如果你也要學一個新的 Claude Skill 概念，先問 AI：</strong></p>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 1</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我有一個 SKILL.md 檔案，幫我解釋它在做什麼，然後告訴我該怎麼安裝到我的環境」</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 2</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我用的是 [Claude Code / Claude.ai / Desktop]，幫我把這個 skill 打包成正確的格式」</span>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-18</strong></span>
+      <span>概念學習 + AI 協作</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+  hljs.highlightAll();
+</script>
+</body>
+</html>
