@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用 AI 整理 Claude Code 的專案記憶（MEMORY.md）</title>
+  <meta name="description" content="讓 Claude Code 自己讀懂脈絡、整理背景知識，讓下次工作更聰明" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-top { padding: 36px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--caramel-light); color: var(--ink-2); padding: 2px 7px; border-radius: 5px; }
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+    .table-wrap { overflow-x: auto; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: var(--espresso); color: var(--cream); font-weight: 500; padding: 12px 18px; text-align: left; font-size: 12px; letter-spacing: .06em; }
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; line-height: 1.7; }
+    pre { border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 24px; font-size: 13px; line-height: 1.7; background: var(--surface-warm); border: 1px solid var(--border); padding: 20px 24px; }
+    pre code { background: none; color: var(--ink-2); padding: 0; font-size: inherit; border-radius: 0; }
+    .callout { display: flex; gap: 14px; padding: 18px 22px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 15px; line-height: 1.75; border-left: 3px solid; }
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+    .ai-role-card { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .ai-role-col { background: var(--surface); padding: 22px 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .ai-role-header { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .ai-role-ai .ai-role-header { color: var(--caramel); }
+    .ai-role-human .ai-role-header { color: #6b9e6b; }
+    .ai-role-col ul { padding-left: 0; list-style: none; margin: 0; }
+    .ai-role-col li { font-size: 14px; padding: 7px 0 7px 20px; position: relative; border-bottom: 1px solid var(--border); color: var(--ink-2); line-height: 1.6; }
+    .ai-role-col li:last-child { border-bottom: none; }
+    .ai-role-ai li::before { content: "◇"; position: absolute; left: 0; color: var(--caramel); font-size: 10px; top: 10px; }
+    .ai-role-human li::before { content: "◆"; position: absolute; left: 0; color: #6b9e6b; font-size: 10px; top: 10px; }
+    .screenshot-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 32px 0; }
+    .screenshot-compare-item { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .screenshot-compare-label { background: var(--espresso); color: var(--cream); font-size: 11px; font-weight: 500; letter-spacing: .12em; padding: 7px 14px; text-transform: uppercase; font-family: var(--mono); }
+    .screenshot-compare-label.after { background: var(--caramel); color: #fff; }
+    .diff-block { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; }
+    .diff-label { background: var(--espresso); color: var(--cream); font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; padding: 7px 16px; }
+    .diff-label.after { background: var(--caramel); }
+    .diff-body { padding: 18px 22px; background: var(--surface); font-family: var(--mono); font-size: 13px; line-height: 1.9; color: var(--ink-2); }
+    .diff-body .add { color: #3a7a3a; }
+    .diff-body .neutral { color: var(--ink-3); }
+    .takeaway { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--caramel); border-radius: var(--radius-sm); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 140px; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .ai-role-card { grid-template-columns: 1fr; }
+      .screenshot-compare { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">AI 協作型</div>
+      <h2>用 AI 整理<br>Claude Code 記憶</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">內容</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>任務背景</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>AI 使用策略</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>關鍵對話轉折</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>整理前後對比</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>分工回顧</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">AI 協作型</span>
+      </div>
+      <h1>用 AI 整理 Claude Code 的專案記憶（MEMORY.md）</h1>
+      <p class="hero-desc">讓 Claude Code 自己讀懂脈絡、整理背景知識，讓下一次對話從零開始變成從脈絡開始。</p>
+      <div class="hero-meta">
+        <span>2026-03-18</span>
+        <span class="hero-meta-dot"></span>
+        <span>AI 協作型</span>
+      </div>
+    </header>
+
+    <!-- Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">用 Claude Code 整理 MEMORY.md，從一個簡單的平面清單，升級為結構化的技術參考文件</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">需要自己翻 git log、讀原始碼、整理已知 bug 清單，再手動寫成 Markdown，約需 15–20 分鐘</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">MEMORY.md 從 15 行擴充到 37 行，增加四個子區塊、兩條防踩坑技術紀錄、完整 Demo 概覽</span>
+      </div>
+    </div>
+
+    <!-- S1 任務背景 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">任務背景</h2>
+      </div>
+
+      <p>Claude Code 有一個叫做 <strong>auto memory</strong> 的機制：它會在專案資料夾對應的位置維護一個 <code>MEMORY.md</code>，裡面記錄的東西會在每次對話開始時被自動讀入。這相當於給 AI 一份「這個專案我需要知道的事」備忘錄。</p>
+
+      <p>這個 ISC West 2026 的展覽網站專案，原本的 MEMORY.md 只有兩段：一段是 ISC West 的基本路徑和 GitHub 連結，另一段是另一個完全不同的專案（ai-notes-site）的資訊被混在一起。</p>
+
+      <p>問題在於：這份記憶太薄。AI 每次重新開啟對話時，不知道這個專案有哪些坑，也不知道展示內容是什麼。當出現模糊指令（例如「整理 claude.md」）時，AI 也沒有足夠的背景知識主動判斷意圖。</p>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>核心概念：</strong>MEMORY.md 不只是給人看的備忘錄，而是給 AI 自己讀的「工作前準備」。寫得越結構化、越包含技術細節，AI 下次工作的品質就越高。</div>
+      </div>
+    </section>
+
+    <!-- S2 AI 使用策略 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">AI 使用策略</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">提問模式：意圖委派型</div>
+        <p>這次的提問非常短：「整理 claude.md」。這是一種<strong>意圖委派型提問</strong>——只說目標，不說方法，讓 AI 自己判斷怎麼做。這種方式適合 AI 對專案已有基本認識的場景；如果 AI 不確定，它會主動釐清。</p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">關鍵策略：主動讀取相關檔案再下手</div>
+        <p>在修改 MEMORY.md 之前，AI 先自行讀取了 IDE 中已開啟的 <code>ISC West Demo Script.md</code>。這讓 AI 在整理記憶時，能加入真實的 Demo 內容概覽，而不只是複製貼上原本的資訊。</p>
+        <p>這是一個值得複製的模式：<strong>整理「記憶文件」之前，先讀一份有代表性的內容文件</strong>，這樣 AI 能從中萃取有用資訊填入記憶。</p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">釐清歧義，不盲目執行</div>
+        <p>原始指令「整理 claude.md」有歧義（找不到 CLAUDE.md 檔案，但有 MEMORY.md）。AI 搜尋後發現沒有目標檔案，主動提出三個選項讓使用者確認，而不是猜測後直接動手。這避免了做錯方向的風險。</p>
+      </div>
+    </section>
+
+    <!-- S3 關鍵對話轉折 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">關鍵對話轉折</h2>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>步驟</th>
+              <th>發生什麼事</th>
+              <th>為什麼重要</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>使用者輸入「整理 claude.md」</td>
+              <td>指令模糊，目標檔案不存在</td>
+              <td>測試 AI 能不能不猜測、主動釐清</td>
+            </tr>
+            <tr>
+              <td>AI 搜尋後發現沒有 CLAUDE.md</td>
+              <td>AI 提出三個可能的目標讓使用者選擇</td>
+              <td>避免盲目執行錯誤方向</td>
+            </tr>
+            <tr>
+              <td>使用者選「整理全域 MEMORY.md」</td>
+              <td>方向明確，AI 開始讀取現有 MEMORY.md</td>
+              <td>這個選擇決定了整個工作方向</td>
+            </tr>
+            <tr>
+              <td>AI 主動讀取 Demo Script.md</td>
+              <td>IDE 中已開啟此檔案，AI 判斷這是相關內容</td>
+              <td>讓整理後的 MEMORY.md 能包含 Demo 概覽</td>
+            </tr>
+            <tr>
+              <td>AI 重寫 MEMORY.md 並存檔</td>
+              <td>分四個子區塊，加入技術注意事項</td>
+              <td>AI 自己改善了自己未來的工作環境</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>這整個過程只花了 1–2 分鐘。短指令 → 釐清 → 執行，這是使用 Claude Code 的高效模式：不需要給出詳細規格，讓 AI 在必要時主動問，然後快速完成。</div>
+      </div>
+    </section>
+
+    <!-- S4 整理前後對比 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">整理前後對比</h2>
+      </div>
+
+      <p>以下是 MEMORY.md 的核心差異。重點不在篇幅增加，而在資訊密度與結構：</p>
+
+      <div class="diff-block">
+        <div class="diff-label">Before — 整理前（15 行）</div>
+        <div class="diff-body">
+          <span class="neutral">## ISC West 2026 專案</span><br>
+          <span class="neutral">- 本機路徑：`d:\00. Marketing\...`</span><br>
+          <span class="neutral">- GitHub：https://github.com/...(branch: main)</span><br>
+          <span class="neutral">- Cloudflare：Direct Upload 模式，需手動上傳</span><br>
+          <span class="neutral">- 主要檔案：index.html（~2MB）、booth.html（~2.9MB），</span><br>
+          <span class="neutral">&nbsp;&nbsp;含 base64 圖片，Edit 工具無法直接改，需用 Python 腳本</span>
+        </div>
+      </div>
+
+      <div class="diff-block">
+        <div class="diff-label after">After — 整理後（37 行）</div>
+        <div class="diff-body">
+          <span class="neutral">## ISC West 2026 專案</span><br><br>
+          <span class="add">### 基本資訊</span><br>
+          <span class="neutral">- 本機路徑、GitHub、Cloudflare（同前）</span><br><br>
+          <span class="add">### 主要檔案</span><br>
+          <span class="neutral">- index.html（~2MB）、booth.html（~2.9MB）</span><br>
+          <span class="add">- **兩個檔案含大量 base64 圖片，Edit 工具無法直接修改，需用 Python 腳本**</span><br>
+          <span class="add">- ISC West Demo Script.md：現場 Demo 腳本（6 個 Demo + Q&amp;A）</span><br>
+          <span class="add">- ISC West Bullet Points.docx：產品賣點整理</span><br><br>
+          <span class="add">### 技術重點</span><br>
+          <span class="add">- i18n 字串不能含單引號（曾導致 JS 語法錯誤，用 &amp;#39; 或雙引號包覆）</span><br>
+          <span class="add">- iframe 語言同步：需在 iframe load 後再發送語言訊息</span><br>
+          <span class="add">- 密碼保護：Vercel Edge Middleware</span><br><br>
+          <span class="add">### Demo 內容概覽（6 個 Demo）</span><br>
+          <span class="add">1. AI 情境分析 → 2. 姿勢偵測 + Webhook → 3. GenFace</span><br>
+          <span class="add">4. AI 自然語言搜尋 → 5. Share QR Code → 6. AI-NVS</span>
+        </div>
+      </div>
+
+      <p>最關鍵的新增是<strong>「技術重點」子區塊</strong>：這兩條紀錄（i18n 單引號問題、iframe 語言同步）都是這個專案過去踩過的坑，被寫進記憶後，AI 日後工作就不會再犯同樣的錯。</p>
+    </section>
+
+    <!-- S5 分工回顧 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">AI vs 人 分工回顧</h2>
+      </div>
+
+      <div class="ai-role-card">
+        <div class="ai-role-col ai-role-ai">
+          <div class="ai-role-header">AI 負責</div>
+          <ul>
+            <li>搜尋專案目錄，確認目標檔案是否存在</li>
+            <li>提出三個候選方向，供使用者選擇</li>
+            <li>讀取現有 MEMORY.md，分析資訊缺口</li>
+            <li>主動讀取 Demo Script.md，萃取有用資訊</li>
+            <li>決定新的文件結構（四個子區塊）</li>
+            <li>從 git commit history 提取已知技術問題</li>
+            <li>撰寫並存檔新版 MEMORY.md</li>
+          </ul>
+        </div>
+        <div class="ai-role-col ai-role-human">
+          <div class="ai-role-header">人負責</div>
+          <ul>
+            <li>發出一句模糊指令「整理 claude.md」</li>
+            <li>從三個選項中確認目標（MEMORY.md）</li>
+            <li>（無需其他操作，直接等 AI 完成）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div>這是「最小授權」模式：人只做決策，AI 做所有研究與執行。關鍵是 AI 在不確定時主動問，而不是猜測——這讓模糊指令也能安全地運作。</div>
+      </div>
+    </section>
+
+    <!-- S6 Takeaway -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p>AI 可以主動維護自己的工作環境。MEMORY.md 是 AI 的「工作前準備清單」，定期讓 AI 更新它，相當於每次工作前先做交接會議——AI 會記得上次的坑，也知道這個專案的獨特限制。</p>
+        <p>更重要的是：<strong>這件事本身只需要一句話</strong>。你不需要告訴 AI 要加什麼、怎麼組織，AI 會讀原始內容、讀相關文件，然後自己判斷怎麼補充。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">可移植性</div>
+        <div class="matrix-row">
+          <span class="matrix-key">適合直接複製的情境</span>
+          <span class="matrix-arrow">→</span>
+          <span>任何有使用 Claude Code 的專案，只要有 MEMORY.md 就能套用</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">特殊前提條件</span>
+          <span class="matrix-arrow">→</span>
+          <span>需要有「過去踩過坑的歷史」可以讓 AI 萃取（git commits、已開啟的文件）</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">不適用的場景</span>
+          <span class="matrix-arrow">→</span>
+          <span>全新專案，沒有任何歷史脈絡可讀，此時只能手動提供初始記憶</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <p><strong>起手式 1（定期維護）：</strong></p>
+        <pre><code class="language-text">幫我整理這個專案的 MEMORY.md，
+讀一下最近的 git commits 和現在開著的檔案，
+看看有什麼技術細節或已知問題值得記錄進去。</code></pre>
+        <p><strong>起手式 2（剛解完一個 bug）：</strong></p>
+        <pre><code class="language-text">剛才這個問題解決了，幫我把根本原因和解法
+寫進 MEMORY.md 的「技術重點」區塊，
+避免下次再踩同一個坑。</code></pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-18</strong></span>
+      <span>AI 協作型</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+  hljs.highlightAll();
+</script>
+</body>
+</html>
