@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用 AI 建立 ISC West 2026 展覽攤位網站</title>
+  <meta name="description" content="靜態 HTML 展覽網站從 0 到部署：雙語切換、密碼保護、Cloudflare 上線，含兩個 debug 實錄" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-top { padding: 36px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--caramel-light); color: var(--ink-2); padding: 2px 7px; border-radius: 5px; }
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+    .table-wrap { overflow-x: auto; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: var(--espresso); color: var(--cream); font-weight: 500; padding: 12px 18px; text-align: left; font-size: 12px; letter-spacing: .06em; }
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; line-height: 1.7; }
+    pre { border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 24px; font-size: 13px; line-height: 1.7; background: var(--surface-warm); border: 1px solid var(--border); padding: 20px 24px; }
+    pre code { background: none; color: var(--ink-2); padding: 0; font-size: inherit; border-radius: 0; }
+    .callout { display: flex; gap: 14px; padding: 18px 22px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 15px; line-height: 1.75; border-left: 3px solid; }
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+    .tech-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .tech-pill { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+    .tech-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .bug-block { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; }
+    .bug-header { background: var(--espresso); padding: 13px 22px; display: flex; align-items: center; gap: 12px; }
+    .bug-icon { font-size: 14px; color: #e8c97a; }
+    .bug-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: #e8c97a; letter-spacing: .03em; }
+    .bug-body { background: var(--surface); padding: 22px 24px; }
+    .takeaway { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--caramel); border-radius: var(--radius-sm); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 130px; }
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">工具開發型</div>
+      <h2>ISC West 2026<br>展覽攤位網站</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">內容</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>需求背景</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>技術選型</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>實作步驟</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>踩坑紀錄</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>部署方式</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN ══ -->
+  <main class="main">
+
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">工具開發型</span>
+      </div>
+      <h1>用 AI 建立 ISC West 2026<br>展覽攤位網站</h1>
+      <p class="hero-desc">靜態 HTML 展覽網站從 0 到 Cloudflare 上線，含雙語切換、密碼保護，以及兩個 debug 實錄。</p>
+      <div class="hero-meta">
+        <span>2026-03-18</span>
+        <span class="hero-meta-dot"></span>
+        <span>工具開發型</span>
+      </div>
+    </header>
+
+    <!-- Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">用 Claude Code 建立 ISC West 2026 展覽攤位的靜態展示網站，包含雙語切換、產品展示頁、密碼保護，部署到 Cloudflare Pages</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">需要自己寫所有 HTML/CSS/JS，雙語切換與 iframe 同步尤其費時，debug 更需要從零追蹤</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">兩個完整展示頁（index.html ~2MB、booth.html ~2.9MB），含雙語切換、密碼保護，已部署上線供展覽使用</span>
+      </div>
+    </div>
+
+    <!-- S1 需求背景 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">需求背景</h2>
+      </div>
+
+      <p>ISC West 是美國最大的安防展覽，每年在拉斯維加斯舉辦。2026 年的攤位需要一個<strong>專屬展示網站</strong>，讓現場工作人員能在平板或電腦上導覽產品介紹，同時支援中英文雙語切換（服務不同語言的訪客）。</p>
+
+      <p>網站不需要後端，也不需要 CMS，純靜態即可。圖片素材量很大，採用 base64 內嵌方式處理，讓頁面完全自包含，不依賴外部圖片伺服器。</p>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>展覽網站的特殊需求：</strong>現場 Wi-Fi 不穩定，因此網站必須能離線運作，所有資源（圖片、字型）都要內嵌或預載。base64 圖片雖然讓檔案很大，但確保了完全離線可用。</div>
+      </div>
+    </section>
+
+    <!-- S2 技術選型 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">技術選型</h2>
+      </div>
+
+      <div class="tech-row">
+        <span class="tech-pill"><span class="tech-dot" style="background:#e44d26"></span>HTML / CSS / JS</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#f38020"></span>Cloudflare Pages</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#000000"></span>Vercel Edge Middleware</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#3178c6"></span>data-i18n 雙語系統</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#c08040"></span>postMessage iframe 同步</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>選擇</th><th>理由</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>靜態 HTML（無框架）</td>
+              <td>展覽環境不需要動態功能，純靜態最穩定、部署最簡單</td>
+            </tr>
+            <tr>
+              <td>base64 圖片內嵌</td>
+              <td>頁面完全自包含，確保離線也能正常顯示，不依賴外部圖片伺服器</td>
+            </tr>
+            <tr>
+              <td>data-i18n 雙語切換</td>
+              <td>無需 i18n 套件，用 <code>data-i18n</code> 屬性 + JS 切換，足夠輕量</td>
+            </tr>
+            <tr>
+              <td>Cloudflare Pages</td>
+              <td>直接上傳靜態檔案，無需設定 CI/CD，部署快速</td>
+            </tr>
+            <tr>
+              <td>密碼保護用 Vercel Edge Middleware</td>
+              <td>Cloudflare 原生密碼保護需付費，Middleware 方案免費且彈性</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>Cloudflare Pages 採用 <strong>Direct Upload 模式</strong>，需手動上傳，無法直接連接 GitHub 自動部署。這表示每次更新都要手動上傳，要特別留意。</div>
+      </div>
+    </section>
+
+    <!-- S3 實作步驟 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">實作步驟</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Step 1｜建立兩個主要頁面</div>
+        <p>網站包含兩個主要頁面：<code>index.html</code>（產品主展示頁）和 <code>booth.html</code>（攤位介紹頁）。所有圖片素材以 base64 格式內嵌，讓頁面完全獨立。這讓每個 HTML 檔案都非常大（~2–3 MB），需要注意：<strong>這個大小讓 Claude Code 的 Edit 工具無法直接修改，所有批次編輯需要用 Python 腳本處理。</strong></p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Step 2｜加入雙語切換系統</div>
+        <p>在 HTML 元素上加入 <code>data-i18n</code> 屬性，值對應一個語言 key。JavaScript 讀取這些屬性，根據目前語言切換對應的文字內容。</p>
+        <pre><code class="language-html">&lt;!-- HTML 標記語言 key --&gt;
+&lt;h1 data-i18n="hero.title"&gt;&lt;/h1&gt;
+
+&lt;!-- JS 切換函式 --&gt;
+function applyLanguage(lang) {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = i18n[lang][key] || key;
+  });
+}</code></pre>
+        <p>頁面內有 iframe 嵌入其他子頁，語言切換時需同步通知 iframe，使用 <code>postMessage</code> 跨頁通訊。</p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Step 3｜加入密碼保護</div>
+        <p>在部署前加入 Vercel Edge Middleware，要求輸入密碼才能瀏覽網站。這讓展覽前的準備階段不會對外公開，也能控制誰可以存取 Demo 頁面。</p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Step 4｜部署到 Cloudflare Pages</div>
+        <p>使用 Cloudflare Pages 的 Direct Upload，直接上傳 HTML 檔案，幾分鐘內就能取得公開網址。</p>
+      </div>
+    </section>
+
+    <!-- S4 踩坑紀錄 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">踩坑紀錄</h2>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug 1：i18n 字串含單引號導致 JS 語法錯誤</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>雙語切換功能完全失效，Console 顯示 <code>SyntaxError: Unexpected token</code>，但找不到明顯問題。</div>
+          </div>
+          <p><strong>根本原因：</strong>i18n 語言物件直接寫在 <code>.js</code> 或 inline <code>&lt;script&gt;</code> 中，其中某條字串含有英文單引號（例如 <code>don't</code>），而外層用的是單引號包覆 → 提前截斷字串，造成語法錯誤。</p>
+          <pre><code class="language-javascript">// ❌ 錯誤：外層單引號 + 字串含單引號
+const i18n = {
+  en: { desc: 'It don't require setup' }
+}
+
+// ✅ 修正方式一：改用 HTML entity
+const i18n = {
+  en: { desc: 'It don&#39;t require setup' }
+}
+
+// ✅ 修正方式二：外層改用雙引號
+const i18n = {
+  en: { desc: "It don't require setup" }
+}</code></pre>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防：</strong>i18n 字串統一用雙引號包覆，或在建立語言物件時直接用 Template Literal（<code>`...`</code>），避免引號衝突。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug 2：iframe 語言切換不同步</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>切換語言後，主頁面文字正確切換，但 iframe 內的子頁文字仍停留在原語言。</div>
+          </div>
+          <p><strong>根本原因：</strong>語言切換事件在 iframe 尚未載入完成時就發送了 <code>postMessage</code>，訊息被丟棄。iframe 的 <code>load</code> 事件尚未觸發，還沒開始監聽訊息。</p>
+          <pre><code class="language-javascript">// ❌ 錯誤：直接發送，不管 iframe 是否已載入
+function switchLang(lang) {
+  applyLanguage(lang);
+  iframe.contentWindow.postMessage({ lang }, '*');
+}
+
+// ✅ 修正：等 iframe load 完成再發送
+iframe.addEventListener('load', () => {
+  iframe.contentWindow.postMessage({ lang: currentLang }, '*');
+});
+
+// 切換時也要補發
+function switchLang(lang) {
+  currentLang = lang;
+  applyLanguage(lang);
+  // iframe 已載入才發，否則 load 事件會補發
+  if (iframeLoaded) {
+    iframe.contentWindow.postMessage({ lang }, '*');
+  }
+}</code></pre>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>規則：</strong>任何跨 iframe 的 <code>postMessage</code> 都要確認 iframe 已觸發 <code>load</code> 事件後才發送。可以用一個 flag 記錄 iframe 是否已就緒。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5 部署方式 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">部署方式</h2>
+      </div>
+
+      <p>這個專案使用 <strong>Cloudflare Pages Direct Upload</strong>，而非 Git 整合部署。原因是展覽素材（base64 圖片）讓 HTML 檔案非常大，加上修改頻率不高，手動上傳反而更直接。</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>項目</th><th>細節</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>平台</td>
+              <td>Cloudflare Pages</td>
+            </tr>
+            <tr>
+              <td>部署方式</td>
+              <td>Direct Upload（手動上傳 HTML 檔案）</td>
+            </tr>
+            <tr>
+              <td>GitHub 整合</td>
+              <td>無（Cloudflare 和 GitHub 各自獨立）</td>
+            </tr>
+            <tr>
+              <td>更新流程</td>
+              <td>修改本機 HTML → Cloudflare 後台手動上傳</td>
+            </tr>
+            <tr>
+              <td>密碼保護</td>
+              <td>Vercel Edge Middleware（展覽前限制存取）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>由於 HTML 檔案含 base64 圖片（單檔 2–3 MB），<strong>Claude Code 的 Edit 工具會超時</strong>，無法直接修改這兩個檔案。需要用 Python 腳本做批次字串替換，或在 Claude Code 外部用文字編輯器修改。</div>
+      </div>
+    </section>
+
+    <!-- S6 Takeaway -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p>展覽網站有獨特的限制：要能離線運作、要輕量部署、要快速迭代。靜態 HTML + base64 圖片 + Cloudflare 是一個可行的組合，但要做好心理準備——<strong>大型靜態 HTML 的維護成本比看起來高</strong>，特別是使用 AI 工具輔助修改時。</p>
+        <p>兩個 bug 都是<strong>時序問題</strong>：一個是 JS 字串解析的時序，一個是 iframe 載入的時序。這類 bug 的共同特徵是「功能本身沒問題，只是在錯誤的時間點執行」。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">可移植性</div>
+        <div class="matrix-row">
+          <span class="matrix-key">適合直接套用</span>
+          <span class="matrix-arrow">→</span>
+          <span>任何需要離線運作的靜態展示網站：展覽、簡報、產品 Demo</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">base64 圖片策略</span>
+          <span class="matrix-arrow">→</span>
+          <span>圖片少（&lt;10 張）才適合，多的話應改用外部 CDN + Service Worker 離線快取</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">雙語切換踩坑</span>
+          <span class="matrix-arrow">→</span>
+          <span>i18n 字串用雙引號或 Template Literal；iframe 同步要等 load 事件</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <p><strong>起手式 1（建立展示頁）：</strong></p>
+        <pre><code class="language-text">幫我建立一個靜態 HTML 展示頁，
+需要支援中英文雙語切換（data-i18n 方式），
+頁面內有 iframe 嵌入子頁，語言切換時要同步。
+請先建立骨架結構和語言切換機制，圖片我之後再加。</code></pre>
+        <p><strong>起手式 2（debug 雙語失效）：</strong></p>
+        <pre><code class="language-text">我的雙語切換功能失效了，
+Console 沒有明顯錯誤，但切換語言後文字沒有更新。
+我的 i18n 字串存在 JS 物件裡，
+幫我檢查是否有引號衝突或字串解析問題。</code></pre>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-18</strong></span>
+      <span>工具開發型</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+  hljs.highlightAll();
+</script>
+</body>
+</html>
