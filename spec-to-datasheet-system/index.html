@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用 AI 建立產品 DataSheet 自動生成系統（V2 全紀錄）</title>
+  <meta name="description" content="從零到完整系統：用 AI 建立支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Design Tokens: Milk Tea ── */
+    :root {
+      --bg: #faf6f1;
+      --bg-warm: #f5ede4;
+      --surface: #ffffff;
+      --surface-warm: #fdf9f5;
+      --ink: #3b2e20;
+      --ink-2: #5c4a3a;
+      --ink-3: #8c7b6b;
+      --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08);
+      --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040;
+      --caramel-light: rgba(192,128,64,0.10);
+      --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8;
+      --latte: #e8daca;
+      --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    /* ── Base ── */
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--ink);
+      line-height: 1.85;
+      font-size: 17px;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 0 0 60px;
+    }
+
+    .sidebar-home {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--ink-3);
+      text-decoration: none;
+      padding: 14px 28px 0;
+      transition: color .15s;
+    }
+
+    .sidebar-home:hover { color: var(--caramel); }
+
+    .sidebar-top {
+      padding: 36px 28px 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+
+    .sidebar-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 14px;
+    }
+
+    .sidebar-top h2 {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+
+    .nav-group-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      padding: 0 10px;
+      margin-bottom: 8px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--ink-3);
+      text-decoration: none;
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      transition: color .15s, background .15s;
+      line-height: 1.4;
+    }
+
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+
+    .nav-link.active {
+      color: var(--ink);
+      background: var(--caramel-light);
+      border-left: 2.5px solid var(--caramel);
+      padding-left: 7.5px;
+    }
+
+    .nav-num {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--ink-4);
+      flex-shrink: 0;
+    }
+
+    .nav-link.active .nav-num { color: var(--caramel); }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      padding: 64px 80px 120px 80px;
+      min-width: 0;
+      max-width: 860px;
+    }
+
+    /* ── Hero ── */
+    .hero { margin-bottom: 56px; }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      padding: 6px 16px;
+      background: var(--caramel-light);
+      border-radius: 100px;
+    }
+
+    .eyebrow-text {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--caramel);
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: 38px;
+      font-weight: 400;
+      line-height: 1.25;
+      color: var(--ink);
+      margin-bottom: 20px;
+      letter-spacing: -.01em;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--ink-2);
+      line-height: 1.8;
+      max-width: 540px;
+    }
+
+    .hero-meta {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--ink-4);
+    }
+
+    .hero-meta-dot {
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--ink-4);
+    }
+
+    /* ── Case Card ── */
+    .case-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 56px;
+      box-shadow: 0 1px 3px rgba(90,60,30,0.04);
+    }
+
+    .case-card-row {
+      display: flex;
+      align-items: baseline;
+      gap: 20px;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+
+    .case-card-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      color: var(--caramel);
+      min-width: 130px;
+      flex-shrink: 0;
+    }
+
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 64px;
+      scroll-margin-top: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .section-num {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--surface);
+      background: var(--caramel);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--ink);
+    }
+
+    .subsection { margin-bottom: 28px; }
+
+    .subsection-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: var(--ink-2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .subsection-label::before {
+      content: '';
+      width: 18px;
+      height: 2px;
+      background: var(--caramel);
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+
+    /* ── Prose ── */
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+
+    code {
+      font-family: var(--mono);
+      font-size: 13px;
+      background: var(--caramel-light);
+      color: var(--ink-2);
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+    thead th {
+      background: var(--espresso);
+      color: var(--cream);
+      font-weight: 500;
+      padding: 12px 18px;
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: .06em;
+    }
+
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* ── Code blocks ── */
+    pre {
+      border-radius: var(--radius-sm);
+      overflow-x: auto;
+      margin-bottom: 24px;
+      font-size: 13px;
+      line-height: 1.7;
+      background: var(--surface-warm);
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+    }
+
+    pre code {
+      background: none;
+      color: var(--ink-2);
+      padding: 0;
+      font-size: inherit;
+      border-radius: 0;
+    }
+
+    /* ── Callout ── */
+    .callout {
+      display: flex;
+      gap: 14px;
+      padding: 18px 22px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 24px;
+      font-size: 15px;
+      line-height: 1.75;
+      border-left: 3px solid;
+    }
+
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+
+    /* ── Tech pills ── */
+    .tech-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+
+    .tech-pill {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 13px; font-weight: 500; color: var(--ink-2);
+    }
+
+    .tech-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── Decision tree ── */
+    .tree-block {
+      background: var(--espresso);
+      border-radius: var(--radius-sm);
+      padding: 24px 28px;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 2;
+      color: var(--cream);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .tq { color: #e8c97a; }
+    .ta { color: #a8d8a8; }
+    .tc { color: #9ab8d4; }
+
+    /* ── Takeaway boxes ── */
+    .takeaway {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--caramel);
+      border-radius: var(--radius-sm);
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(90,60,30,0.04);
+    }
+
+    .takeaway-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      margin-bottom: 16px;
+    }
+
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 110px; }
+
+    /* ── AI Role Card ── */
+    .ai-role-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .ai-role-col {
+      background: var(--surface);
+      padding: 22px 24px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .ai-role-header {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-role-ai .ai-role-header { color: var(--caramel); }
+    .ai-role-human .ai-role-header { color: #6b9e6b; }
+
+    .ai-role-col ul { padding-left: 0; list-style: none; margin: 0; }
+
+    .ai-role-col li {
+      font-size: 14px;
+      padding: 7px 0 7px 20px;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+      color: var(--ink-2);
+      line-height: 1.6;
+    }
+
+    .ai-role-col li:last-child { border-bottom: none; }
+    .ai-role-ai li::before { content: "◇"; position: absolute; left: 0; color: var(--caramel); font-size: 10px; top: 10px; }
+    .ai-role-human li::before { content: "◆"; position: absolute; left: 0; color: #6b9e6b; font-size: 10px; top: 10px; }
+
+    /* ── Stats Grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--caramel);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-top: 6px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 72px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--ink-4);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* ── Mobile ── */
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 100;
+      background: var(--espresso);
+      color: var(--cream);
+      border: none;
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      font-size: 20px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(90,60,30,0.15);
+    }
+
+    @media (max-width: 960px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0; z-index: 50;
+        transition: left .25s ease;
+        box-shadow: 4px 0 32px rgba(90,60,30,0.1);
+      }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .ai-role-card { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <a class="sidebar-home" href="../">&larr; AI Notes</a>
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">Tool Development</div>
+      <h2>EnGenius DataSheet 自動生成系統 V2 全紀錄</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">章節</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>專案目標</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>系統架構</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>技術選型</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>三大產品線</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>核心功能拆解</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>開發歷程</a>
+        <a class="nav-link" href="#s7"><span class="nav-num">07</span>成果總覽</a>
+        <a class="nav-link" href="#s8"><span class="nav-num">08</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- Hero -->
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">工具開發</span>
+      </div>
+      <h1>用 AI 建立產品 DataSheet 自動生成系統</h1>
+      <p class="hero-desc">從零開始，用 AI 逐步建立一套支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具，涵蓋資料驗證、模板引擎、圖片管理、版本控制的完整系統。</p>
+      <div class="hero-meta">
+        <span>2025-12 ~ 2026-03</span>
+        <span class="hero-meta-dot"></span>
+        <span>工具開發型（多輪迭代）</span>
+      </div>
+    </header>
+
+    <!-- Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">用 AI 建立完整的 DataSheet 自動生成系統：Pydantic 資料模型、Jinja2 HTML 模板、Playwright PDF 渲染、Google Drive 圖片管理、自動版本控制，支援 3 大產品線 8 款產品</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">每份 DataSheet 需要設計師用 InDesign 手動排版 3-5 小時，每次規格變更都要重新排版。8 款產品 x 多次改版 = 數百小時人工</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">完整 Python 系統（20+ 檔案），已產出 17 份品牌 PDF。新增一款產品只需準備 JSON + 圖片，一行指令即可生成</span>
+      </div>
+    </div>
+
+    <!-- Section 1: 專案目標 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">專案目標</h2>
+      </div>
+
+      <p>公司有多條網通產品線（WiFi AP、Switch、Camera），每推出新產品或規格更新時，都需要產出符合品牌規範的 DataSheet PDF。傳統做法是設計師用 InDesign 手動排版，耗時且容易出錯。</p>
+
+      <p><strong>核心需求：</strong>建立一套自動化系統，讓行銷人員只需要維護 JSON 規格檔和產品圖片，就能一鍵產出專業品質的 DataSheet PDF。</p>
+
+      <div class="tree-block">
+<span class="tq">痛點是什麼？</span>
+├── 每份 DataSheet 手動排版 3-5 小時
+├── 規格更新要重新開 InDesign 改版
+├── 不同產品線格式不一致
+└── 設計師是瓶頸，行銷無法自行產出
+
+<span class="tq">理想狀態？</span>
+├── <span class="ta">JSON 填規格 → 一行指令 → PDF 產出</span>
+├── <span class="ta">版本自動遞增，歷史完整追蹤</span>
+├── <span class="ta">三大產品線統一品牌風格</span>
+└── <span class="ta">行銷人員可獨立操作</span>
+      </div>
+    </section>
+
+    <!-- Section 2: 系統架構 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">系統架構</h2>
+      </div>
+
+      <p>整個系統遵循 <strong>JSON Data → Pydantic Validation → Jinja2 HTML → Playwright PDF</strong> 的管線設計，每個產品類別有獨立的資料模型和模板，但共用版本管理和圖片管理模組。</p>
+
+      <div class="tree-block">
+<span class="tq">系統架構總覽</span>
+│
+├── <span class="tc">資料層 (data/)</span>
+│   ├── ECW215.json, ECW220.json ...  <span class="ta">← WiFi AP 規格</span>
+│   ├── ECS1008P.json                 <span class="ta">← Switch 規格</span>
+│   └── ECC100.json                   <span class="ta">← Camera 規格</span>
+│
+├── <span class="tc">模型層 (models_*.py)</span>
+│   ├── models_engenius.py   <span class="ta">← AP: 無線/天線/漫遊</span>
+│   ├── models_switch.py     <span class="ta">← Switch: 埠/交換容量/L2/L3</span>
+│   └── models_camera.py     <span class="ta">← Camera: 光學/影像/AI</span>
+│
+├── <span class="tc">模板層 (templates/)</span>
+│   ├── engenius_template.html + CSS
+│   ├── switch_template.html + CSS
+│   └── camera_template.html + CSS
+│
+├── <span class="tc">生成層 (main_*.py)</span>
+│   ├── main_engenius.py     <span class="ta">← AP PDF 生成器</span>
+│   ├── main_switch.py       <span class="ta">← Switch PDF 生成器</span>
+│   └── main_camera.py       <span class="ta">← Camera PDF 生成器</span>
+│
+├── <span class="tc">共用模組</span>
+│   ├── version_manager.py   <span class="ta">← 自動版本遞增</span>
+│   ├── google_drive_manager.py <span class="ta">← Google Drive 圖片下載</span>
+│   └── generate_datasheet.py   <span class="ta">← 統一入口 CLI</span>
+│
+└── <span class="tc">輸出 (output/)</span>
+    └── DS_{型號}_v{版本}.pdf
+      </div>
+    </section>
+
+    <!-- Section 3: 技術選型 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">技術選型</h2>
+      </div>
+
+      <div class="tech-row">
+        <span class="tech-pill"><span class="tech-dot" style="background:#3776AB"></span>Python 3.10+</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#E8503A"></span>Pydantic 2.x</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#B41717"></span>Jinja2</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#2EAD33"></span>Playwright</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#4285F4"></span>Google Drive API</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#E44D26"></span>HTML/CSS</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>環節</th><th>工具</th><th>為什麼這樣選</th></tr></thead>
+          <tbody>
+            <tr><td>資料驗證</td><td><code>Pydantic 2.x</code></td><td>型別安全、自動驗證、IDE 支援好，確保 JSON 資料完整正確</td></tr>
+            <tr><td>HTML 模板</td><td><code>Jinja2</code></td><td>成熟的模板引擎，支援條件/迴圈，方便建立動態版面</td></tr>
+            <tr><td>PDF 渲染</td><td><code>Playwright (Chromium)</code></td><td>CSS 渲染品質最高，支援背景色/漸層/Web Font 列印</td></tr>
+            <tr><td>圖片管理</td><td><code>Google Drive</code></td><td>團隊已有共用 Drive，免額外建圖床</td></tr>
+            <tr><td>資料處理</td><td><code>Pandas + openpyxl</code></td><td>支援 Excel 規格表轉 JSON 的批次處理</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>為什麼不用 LaTeX / WeasyPrint / wkhtmltopdf？</strong>Playwright 用真正的 Chromium 渲染，CSS Grid、Flexbox、漸層、陰影全部正確呈現，DataSheet 的視覺品質和設計師手做的一樣。</div>
+      </div>
+    </section>
+
+    <!-- Section 4: 三大產品線 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">三大產品線的差異</h2>
+      </div>
+
+      <p>三大產品線雖然共用同一套系統架構，但各自有完全不同的規格結構和模板設計：</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>產品線</th><th>已支援型號</th><th>獨特規格區塊</th><th>頁數</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>WiFi AP</strong></td>
+              <td>ECW115, ECW120, ECW215, ECW220, ECW230</td>
+              <td>無線頻段、天線場型圖、MIMO、漫遊</td>
+              <td>5-6 頁</td>
+            </tr>
+            <tr>
+              <td><strong>Switch</strong></td>
+              <td>ECS1008P</td>
+              <td>埠規格、交換容量、L2/L3 功能、QoS</td>
+              <td>4-5 頁</td>
+            </tr>
+            <tr>
+              <td><strong>Camera</strong></td>
+              <td>ECC100</td>
+              <td>光學/影像、AI 分析、音頻、防護等級</td>
+              <td>4 頁</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">WiFi AP 的 Pydantic 模型結構</div>
+        <pre><code class="language-python">class ProductDataSheet(BaseModel):
+    # 基本資訊
+    model_name: str           # "ECW220"
+    product_line: str         # "Cloud Managed"
+    overview: str             # 產品描述
+    features: List[Feature]   # 最多 20 項
+
+    # 技術規格
+    standards: str            # "IEEE 802.11ax/ac/n/a/g/b"
+    antenna: str              # "2x2:2 Internal"
+    radio_chains: str         # "2x2:2"
+    data_rate_2g: str         # "最高 573.5 Mbps"
+    data_rate_5g: str         # "最高 1,201 Mbps"
+
+    # 管理功能
+    security: str             # "WPA3, WPA2, ..."
+    roaming: str              # "802.11r/k/v"
+    compliance: List[str]     # ["FCC", "CE", "IC"]</code></pre>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Camera 的 Pydantic 模型結構</div>
+        <pre><code class="language-python">class CameraDataSheet(BaseModel):
+    optical: OpticalSpec      # 感應器、鏡頭、視角、IR
+    imaging: ImagingSpec      # 解析度、幀率、壓縮格式
+    ai: AISpec                # 人員/車輛偵測、臉辨、車牌辨
+    audio: AudioSpec          # 編碼、麥克風、喇叭
+    hardware: HardwareSpec    # 介面、PoE、防護等級
+    storage: StorageSpec      # 容量、保留天數
+    management: ManagementSpec # 串流、App、瀏覽器</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 5: 核心功能拆解 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">核心功能拆解</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">版本管理系統</div>
+        <p>每次生成 PDF 時，系統會自動判斷是否需要遞增版本號：</p>
+        <ul>
+          <li><strong>同一天重新生成</strong> → 保持相同版本號（覆蓋）</li>
+          <li><strong>不同天重新生成</strong> → 自動遞增 minor 版本（v1.2 → v1.3）</li>
+          <li><strong>版本歷史</strong> → 完整記錄在 <code>datasheet_versions.json</code>，含日期和備註</li>
+        </ul>
+        <pre><code class="language-json">{
+  "ECW220": {
+    "version": "1.9",
+    "date": "02/25/2026",
+    "history": [
+      {"version": "1.2", "date": "12/01/2025", "note": "Initial version"},
+      {"version": "1.8", "date": "02/18/2026", "note": "Updated specs"},
+      {"version": "1.9", "date": "02/25/2026", "note": "Updated version"}
+    ]
+  }
+}</code></pre>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Google Drive 圖片管理</div>
+        <p>產品圖片統一存放在 Google Drive 共用資料夾，系統支援多種 URL 格式的自動解析：</p>
+        <pre><code class="language-python"># 支援的 URL 格式
+https://drive.google.com/file/d/{FILE_ID}/view
+https://drive.google.com/open?id={FILE_ID}
+{FILE_ID}  # 直接使用 File ID
+
+# 自動下載流程
+google_drive_manager.py:
+  1. 解析 URL 取得 File ID
+  2. 建立下載 URL
+  3. 處理大檔案確認 Token
+  4. 下載到 images/ 資料夾</code></pre>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">圖片命名規則</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>圖片類型</th><th>命名格式</th><th>範例</th></tr></thead>
+            <tbody>
+              <tr><td>產品主圖</td><td><code>{Model}.png</code></td><td>ECW220.png</td></tr>
+              <tr><td>硬體圖</td><td><code>{Model}_hardware.png</code></td><td>ECW220_hardware.png</td></tr>
+              <tr><td>天線場型 (AP)</td><td><code>{Model}_antenna_{band}_{plane}.png</code></td><td>ECW220_antenna_5G_H.png</td></tr>
+              <tr><td>品牌 Logo</td><td>固定檔名</td><td>engenius_logo.png</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">統一入口 CLI</div>
+        <pre><code class="language-bash"># 生成單一產品 DataSheet
+python generate_datasheet.py ECW220
+
+# 系統會自動：
+# 1. 偵測產品類別（AP / Switch / Camera）
+# 2. 載入對應的 JSON 資料
+# 3. 驗證資料完整性（Pydantic）
+# 4. 套用對應的 HTML 模板
+# 5. 渲染 PDF（Playwright）
+# 6. 自動版本管理
+# 7. 輸出 output/DS_ECW220_v1.9.pdf</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 6: 開發歷程 -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">開發歷程</h2>
+      </div>
+
+      <p>這個專案是透過多輪 AI 對話迭代完成的，從最初的 AP DataSheet 開始，逐步擴展到三大產品線：</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>階段</th><th>時間</th><th>完成內容</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>V1 - AP 基礎</strong></td>
+              <td>2025-12</td>
+              <td>建立 WiFi AP DataSheet 生成系統，支援 ECW220，首次實現 JSON → PDF 流程</td>
+            </tr>
+            <tr>
+              <td><strong>V1.5 - AP 擴展</strong></td>
+              <td>2026-01</td>
+              <td>新增 ECW215、ECW230、ECW115 支援，加入天線場型圖、版本管理</td>
+            </tr>
+            <tr>
+              <td><strong>V2 - Switch</strong></td>
+              <td>2026-02</td>
+              <td>新增 Switch 產品線（ECS1008P），建立獨立資料模型和模板，加入動態版面計算</td>
+            </tr>
+            <tr>
+              <td><strong>V2 - Camera</strong></td>
+              <td>2026-03</td>
+              <td>新增 Camera 產品線（ECC100），從 Google Sheet 讀取規格，從 Google Drive 下載圖片</td>
+            </tr>
+            <tr>
+              <td><strong>V2 - 文件</strong></td>
+              <td>2026-03</td>
+              <td>完善系統文件：README、使用指南、Excel 欄位說明、圖片命名規則</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">AI 與人的分工</div>
+      </div>
+
+      <div class="ai-role-card">
+        <div class="ai-role-col ai-role-ai">
+          <div class="ai-role-header">AI 負責</div>
+          <ul>
+            <li>設計 Pydantic 資料模型（3 套，共 30+ 子模型）</li>
+            <li>建立 HTML/CSS 模板（3 套，品牌一致）</li>
+            <li>撰寫 PDF 生成器邏輯</li>
+            <li>實作版本管理系統</li>
+            <li>實作 Google Drive 整合</li>
+            <li>讀取 Google Sheet / Excel 並轉換為 JSON</li>
+            <li>Debug 排版問題（分頁、對齊、字型）</li>
+            <li>撰寫完整中英文文件</li>
+          </ul>
+        </div>
+        <div class="ai-role-col ai-role-human">
+          <div class="ai-role-header">人負責</div>
+          <ul>
+            <li>定義需求：需要什麼樣的 DataSheet</li>
+            <li>提供規格來源（Google Sheet URL、Excel）</li>
+            <li>提供圖片來源（Google Drive URL）</li>
+            <li>審核 PDF 成品的視覺品質</li>
+            <li>回報排版問題請 AI 修正</li>
+            <li>決定新增哪些產品型號</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: 成果總覽 -->
+    <section class="section" id="s7">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <h2 class="section-title">成果總覽</h2>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">3</div>
+          <div class="stat-label">產品線</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">8</div>
+          <div class="stat-label">產品型號</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">17</div>
+          <div class="stat-label">PDF 產出</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">20+</div>
+          <div class="stat-label">系統檔案</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">專案檔案結構</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>類別</th><th>檔案</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3">生成器</td><td><code>main_engenius.py</code></td><td>WiFi AP PDF 生成器</td></tr>
+            <tr><td><code>main_switch.py</code></td><td>Switch PDF 生成器</td></tr>
+            <tr><td><code>main_camera.py</code></td><td>Camera PDF 生成器</td></tr>
+            <tr><td rowspan="3">資料模型</td><td><code>models_engenius.py</code></td><td>AP Pydantic 模型</td></tr>
+            <tr><td><code>models_switch.py</code></td><td>Switch Pydantic 模型</td></tr>
+            <tr><td><code>models_camera.py</code></td><td>Camera Pydantic 模型</td></tr>
+            <tr><td rowspan="2">共用</td><td><code>version_manager.py</code></td><td>版本自動遞增</td></tr>
+            <tr><td><code>google_drive_manager.py</code></td><td>Google Drive 圖片下載</td></tr>
+            <tr><td>入口</td><td><code>generate_datasheet.py</code></td><td>CLI 統一入口</td></tr>
+            <tr><td>資料</td><td><code>data/*.json</code> (7 檔)</td><td>7 款產品的完整規格</td></tr>
+            <tr><td>模板</td><td><code>templates/</code> (6 檔)</td><td>3 套 HTML + CSS</td></tr>
+            <tr><td>圖片</td><td><code>images/</code> (40+ 檔)</td><td>產品圖、天線圖、Logo</td></tr>
+            <tr><td>輸出</td><td><code>output/</code> (17 檔)</td><td>PDF + HTML 成品</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 8: Takeaway -->
+    <section class="section" id="s8">
+      <div class="section-header">
+        <span class="section-num">08</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p>用 AI 不只是完成單次任務，而是<strong>建立一套可重複使用的系統</strong>。從第一份 AP DataSheet 開始，每次擴展新產品線時，AI 都能理解既有架構，快速複製模式並針對新需求做調整。最終形成的系統讓非技術人員也能自行維護和產出 DataSheet。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">系統設計的關鍵決策</div>
+        <div class="matrix-row">
+          <span class="matrix-key">JSON over DB</span>
+          <span class="matrix-arrow">→</span>
+          <span>用 JSON 檔案而非資料庫，降低部署門檻，行銷人員可直接編輯</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">HTML over LaTeX</span>
+          <span class="matrix-arrow">→</span>
+          <span>用 HTML/CSS 做模板，任何人都能調整版面，不需學 LaTeX</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">模組化設計</span>
+          <span class="matrix-arrow">→</span>
+          <span>每個產品線獨立模型/模板，新增產品線不影響現有系統</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">版本自動化</span>
+          <span class="matrix-arrow">→</span>
+          <span>避免手動追蹤版本號，減少人為錯誤</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 1</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我需要自動生成 [產品類型] 的 DataSheet PDF，規格資料在 [來源]，請建立完整的生成系統」</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 2</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我已經有 [既有產品] 的 DataSheet 系統，現在要擴展到 [新產品線]，請參考現有架構建立新的模型和模板」</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 3</span>
+          <span class="matrix-arrow">→</span>
+          <span>「這個 Excel/Google Sheet [URL] 有產品規格，請讀取並轉換成我的 DataSheet 系統能用的 JSON 格式」</span>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2025-12 ~ 2026-03</strong></span>
+      <span>工具開發型（多輪迭代）</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+
+  hljs.highlightAll();
+</script>
+</body>
+</html>
