@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Notes</title>
+  <meta name="description" content="AI 使用案例分享 — 記錄如何用 AI 完成各種任務" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #faf6f1;
+      --surface: #ffffff;
+      --surface-warm: #fdf9f5;
+      --ink: #3b2e20;
+      --ink-2: #5c4a3a;
+      --ink-3: #8c7b6b;
+      --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08);
+      --caramel: #c08040;
+      --caramel-light: rgba(192,128,64,0.10);
+      --espresso: #4a3728;
+      --cream: #f0e6d8;
+      --font: 'DM Sans', 'Noto Sans TC', sans-serif;
+      --serif: 'Fraunces', 'Noto Sans TC', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--ink);
+      line-height: 1.85;
+      font-size: 17px;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 80px 32px 120px;
+    }
+
+    /* Hero */
+    .hero { margin-bottom: 48px; }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 6px 16px;
+      background: var(--caramel-light);
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--caramel);
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-size: 42px;
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 16px;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      color: var(--ink-2);
+      line-height: 1.8;
+      max-width: 540px;
+    }
+
+    .stats {
+      margin-top: 20px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--ink-4);
+    }
+
+    .stats span { margin-right: 20px; }
+    .stats strong { color: var(--caramel); }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 40px;
+    }
+
+    .filter-btn {
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 7px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink-3);
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .filter-btn:hover { border-color: var(--caramel); color: var(--ink-2); }
+    .filter-btn.active { background: var(--caramel); color: #fff; border-color: var(--caramel); }
+
+    /* Note cards */
+    .notes-grid { display: flex; flex-direction: column; gap: 16px; }
+
+    .note-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow .2s, border-color .2s;
+      display: block;
+    }
+
+    .note-card:hover {
+      box-shadow: 0 4px 20px rgba(90,60,30,0.08);
+      border-color: var(--caramel);
+    }
+
+    .note-card-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .note-type {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--caramel);
+      background: var(--caramel-light);
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .note-date { font-size: 12px; color: var(--ink-4); }
+
+    .note-card h3 {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .note-desc { font-size: 14px; color: var(--ink-3); line-height: 1.7; margin-bottom: 8px; }
+    .note-outcome { font-size: 13px; color: var(--ink-4); font-style: italic; }
+
+    footer {
+      margin-top: 72px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink-4);
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 40px 20px 80px; }
+      .hero h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="hero-eyebrow">Case Studies</div>
+      <h1>AI Notes</h1>
+      <p class="hero-desc">記錄如何用 AI 完成各種任務的案例分享。每篇都包含思路、做法、踩坑，讓你能在類似情境下複製。</p>
+      <div class="stats" id="stats"></div>
+    </header>
+
+    <div class="filters" id="filters"></div>
+    <div class="notes-grid" id="notesGrid"></div>
+
+    <footer>AI Notes · Case Studies Collection</footer>
+  </div>
+
+<script>
+const NOTES = [
+  // ── 在這裡新增筆記 ──
+  {
+    slug: "google-sheet-to-datasheet",
+    title: "用 AI 把 Google Sheet 規格表自動變成品牌 DataSheet PDF",
+    type: "工具開發",
+    date: "2026-03-19",
+    desc: "給 AI 一個 Google Sheet 連結和 Google Drive 圖片資料夾，讓它自動建立 Camera DataSheet 生成系統並產出 PDF",
+    outcome: "完整的 Camera DataSheet 生成系統（5 個新檔案）+ ECC100 4 頁品牌 PDF，整個過程約 10 分鐘",
+  },
+];
+
+// Render
+const grid = document.getElementById('notesGrid');
+const filtersEl = document.getElementById('filters');
+const statsEl = document.getElementById('stats');
+
+const types = [...new Set(NOTES.map(n => n.type))];
+
+statsEl.innerHTML = `<span><strong>${NOTES.length}</strong> 篇筆記</span><span><strong>${types.length}</strong> 種類型</span>`;
+
+// Filters
+const allBtn = document.createElement('button');
+allBtn.className = 'filter-btn active';
+allBtn.textContent = '全部';
+allBtn.onclick = () => render();
+filtersEl.appendChild(allBtn);
+
+types.forEach(t => {
+  const btn = document.createElement('button');
+  btn.className = 'filter-btn';
+  btn.textContent = t;
+  btn.onclick = () => render(t);
+  filtersEl.appendChild(btn);
+});
+
+function render(filter) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (filter) {
+    [...filtersEl.children].find(b => b.textContent === filter)?.classList.add('active');
+  } else {
+    filtersEl.children[0].classList.add('active');
+  }
+
+  const filtered = filter ? NOTES.filter(n => n.type === filter) : NOTES;
+  grid.innerHTML = filtered.map(n => `
+    <a class="note-card" href="./${n.slug}/">
+      <div class="note-card-top">
+        <span class="note-type">${n.type}</span>
+        <span class="note-date">${n.date}</span>
+      </div>
+      <h3>${n.title}</h3>
+      <p class="note-desc">${n.desc}</p>
+      <p class="note-outcome">${n.outcome}</p>
+    </a>
+  `).join('');
+}
+
+render();
+</script>
+</body>
+</html>
