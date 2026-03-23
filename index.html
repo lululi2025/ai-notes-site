@@ -132,6 +132,14 @@
     // ── 在這裡新增筆記 ──
     const NOTES = [
       {
+        slug: "pdf-cmyk-rgb-color-mismatch",
+        title: "PDF 背景色差追蹤：從截圖到 CMYK 色彩空間的精確修復",
+        type: "問題解決",
+        date: "2026-03-23",
+        desc: "PDF 背頁文字替換後出現色差，追蹤發現模板用 CMYK 而 PyMuPDF redaction 用 RGB。用 _insert_contents 注入原生 CMYK 指令精確修復，0 色差。",
+        outcome: "背面全部取樣點 pixel-perfect 匹配 #0090d4，CMYK/RGB 混合使用的通用解法",
+      },
+      {
         slug: "engenius-namecard-cjk-multitab",
         title: "多地區名片生成器：CJK 字體、PDF 重繪、地區分頁 UI",
         type: "工具開發",
