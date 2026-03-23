@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --surface: #ffffff; --ink: #3b2e20; --ink-2: #5c4a3a;
+      --ink-3: #8c7b6b; --ink-4: #b0a494; --border: rgba(90,60,30,0.08);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10);
+      --caramel-mid: rgba(192,128,64,0.22); --cream: #f0e6d8; --espresso: #4a3728;
+      --font: 'DM Sans','Noto Sans TC',sans-serif;
+      --serif: 'Fraunces','Noto Sans TC',Georgia,serif;
+      --mono: 'IBM Plex Mono',monospace; --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--bg); color: var(--ink); line-height: 1.85; }
+
+    /* ── Header ── */
+    .site-header {
+      max-width: 960px; margin: 0 auto; padding: 72px 40px 56px;
+    }
+    .site-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 28px;
+      padding: 6px 16px; background: var(--caramel-light); border-radius: 100px;
+      font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel);
+    }
+    .site-header h1 {
+      font-family: var(--serif); font-size: 48px; font-weight: 400; line-height: 1.2;
+      color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em;
+    }
+    .site-header p { font-size: 17px; color: var(--ink-3); max-width: 480px; line-height: 1.75; }
+    .site-stats {
+      margin-top: 28px; display: inline-flex; align-items: center; gap: 20px;
+      font-size: 13px; color: var(--ink-4);
+    }
+    .stat-badge {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+      padding: 5px 14px; font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      max-width: 960px; margin: 0 auto; padding: 0 40px 32px;
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .filter-btn {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 100px;
+      padding: 7px 18px; font-size: 13px; font-weight: 500; color: var(--ink-3);
+      cursor: pointer; transition: all .15s;
+    }
+    .filter-btn:hover { color: var(--ink); border-color: var(--caramel-mid); }
+    .filter-btn.active {
+      background: var(--caramel); border-color: var(--caramel); color: #fff;
+    }
+
+    /* ── Grid ── */
+    .notes-grid {
+      max-width: 960px; margin: 0 auto; padding: 0 40px 100px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+    }
+
+    .note-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; text-decoration: none; display: flex; flex-direction: column;
+      transition: box-shadow .2s, transform .2s; position: relative; overflow: hidden;
+    }
+    .note-card:hover { box-shadow: 0 8px 32px rgba(90,60,30,0.10); transform: translateY(-2px); }
+    .note-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--caramel); opacity: 0; transition: opacity .2s;
+    }
+    .note-card:hover::before { opacity: 1; }
+
+    .note-type {
+      font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--caramel); margin-bottom: 14px;
+    }
+    .note-title {
+      font-family: var(--serif); font-size: 18px; font-weight: 400; line-height: 1.4;
+      color: var(--ink); margin-bottom: 12px;
+    }
+    .note-desc { font-size: 14px; color: var(--ink-3); line-height: 1.7; flex: 1; margin-bottom: 20px; }
+    .note-outcome {
+      font-size: 13px; color: var(--ink-2); background: var(--bg);
+      border-radius: var(--radius-sm); padding: 10px 14px; line-height: 1.6;
+      border: 1px solid var(--border);
+    }
+    .note-outcome::before { content: '✓ '; color: var(--caramel); font-weight: 600; }
+    .note-meta {
+      margin-top: 16px; display: flex; align-items: center; gap: 8px;
+      font-size: 11px; color: var(--ink-4);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      grid-column: 1/-1; text-align: center; padding: 60px 20px;
+      color: var(--ink-4); font-size: 15px;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .site-header { padding: 48px 24px 40px; }
+      .site-header h1 { font-size: 34px; }
+      .filter-bar { padding: 0 24px 24px; }
+      .notes-grid { padding: 0 24px 80px; grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="site-header">
+    <div class="site-eyebrow">AI Notes</div>
+    <h1>AI 使用案例<br>分享紀錄</h1>
+    <p>記錄每一次與 AI 協作解決問題的過程、思路與可複製的方法。</p>
+    <div class="site-stats">
+      <span class="stat-badge" id="noteCount">0 篇</span>
+    </div>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" data-type="all">全部</button>
+  </div>
+
+  <div class="notes-grid" id="notesGrid"></div>
+
+  <script>
+    // ── 在這裡新增筆記 ──
+    const NOTES = [
+      {
+        slug: "engenius-namecard-cjk-multitab",
+        title: "多地區名片生成器：CJK 字體、PDF 重繪、地區分頁 UI",
+        type: "工具開發",
+        date: "2026-03-23",
+        desc: "為 Python + Flask 名片生成系統加上多地區分頁 UI、解決日文亂碼（CJK 字元層級字體切換）、修復 PDF 背頁重繪 bug，並實作日本分公司特殊東京本社地址邏輯",
+        outcome: "多地區分頁 Web UI + 日文正確渲染 + 動態背頁 + JP 東京本社地址邏輯，部署至 Vercel → engenius-namecard.vercel.app",
+        url_label: "engenius-namecard.vercel.app",
+        live_url: "https://engenius-namecard.vercel.app",
+      },
+    ];
+
+    const grid = document.getElementById('notesGrid');
+    const filterBar = document.getElementById('filterBar');
+    const countEl = document.getElementById('noteCount');
+
+    // 收集所有類型
+    const types = [...new Set(NOTES.map(n => n.type))];
+    types.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.type = t;
+      btn.textContent = t;
+      filterBar.appendChild(btn);
+    });
+
+    countEl.textContent = `${NOTES.length} 篇`;
+
+    function renderNotes(filter) {
+      const filtered = filter === 'all' ? NOTES : NOTES.filter(n => n.type === filter);
+      grid.innerHTML = '';
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-state">此類型尚無筆記</div>';
+        return;
+      }
+      filtered.forEach(note => {
+        const card = document.createElement('a');
+        card.className = 'note-card';
+        card.href = `./${note.slug}/`;
+        card.innerHTML = `
+          <div class="note-type">${note.type}</div>
+          <div class="note-title">${note.title}</div>
+          <div class="note-desc">${note.desc}</div>
+          <div class="note-outcome">${note.outcome}</div>
+          <div class="note-meta">
+            ${note.date}
+            ${note.live_url ? `<span style="margin-left:auto"><a href="${note.live_url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--caramel);font-size:11px;text-decoration:none;font-family:var(--mono);">↗ 線上版本</a></span>` : ''}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    renderNotes('all');
+
+    filterBar.addEventListener('click', e => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderNotes(btn.dataset.type);
+    });
+  </script>
+</body>
+</html>
