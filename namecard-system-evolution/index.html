@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>名片系統進化：從 PDF 生成到完整 Web App 的 AI 協作開發</title>
+  <meta name="description" content="用 AI 逐步把名片 PDF 生成腳本進化成完整 Web App — 自動偵測分頁、CMYK 修色、預覽功能、RWD 表格、密碼保護" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #faf6f1; --bg-warm: #f5ede4; --surface: #ffffff; --surface-warm: #fdf9f5;
+      --ink: #3b2e20; --ink-2: #5c4a3a; --ink-3: #8c7b6b; --ink-4: #b0a494;
+      --border: rgba(90,60,30,0.08); --border-strong: rgba(90,60,30,0.14);
+      --caramel: #c08040; --caramel-light: rgba(192,128,64,0.10); --caramel-mid: rgba(192,128,64,0.22);
+      --cream: #f0e6d8; --latte: #e8daca; --espresso: #4a3728;
+      --sidebar-w: 260px;
+      --font: 'DM Sans','Noto Sans TC',sans-serif;
+      --serif: 'Fraunces','Noto Sans TC',Georgia,serif;
+      --mono: 'IBM Plex Mono',monospace;
+      --radius: 12px; --radius-sm: 8px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); background-color: var(--bg); color: var(--ink); line-height: 1.85; font-size: 17px; }
+    .layout { display: flex; min-height: 100vh; width: 100%; }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--surface); border-right: 1px solid var(--border); padding: 0 0 60px; }
+    .sidebar-home { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); text-decoration: none; padding: 14px 28px 0; transition: color .15s; }
+    .sidebar-home:hover { color: var(--caramel); }
+    .sidebar-top { padding: 20px 28px 28px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .sidebar-eyebrow { font-size: 10px; font-weight: 500; letter-spacing: .18em; text-transform: uppercase; color: var(--caramel); margin-bottom: 14px; }
+    .sidebar-top h2 { font-family: var(--serif); font-size: 17px; font-weight: 400; color: var(--ink); line-height: 1.55; }
+    .nav-section { padding: 0 18px; }
+    .nav-group { margin-top: 28px; }
+    .nav-group-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-4); padding: 0 10px; margin-bottom: 8px; }
+    .nav-link { display: flex; align-items: baseline; gap: 12px; font-size: 14px; color: var(--ink-3); text-decoration: none; padding: 9px 10px; border-radius: var(--radius-sm); transition: color .15s, background .15s; line-height: 1.4; }
+    .nav-link:hover { color: var(--ink); background: var(--caramel-light); }
+    .nav-link.active { color: var(--ink); background: var(--caramel-light); border-left: 2.5px solid var(--caramel); padding-left: 7.5px; }
+    .nav-num { font-family: var(--mono); font-size: 10px; color: var(--ink-4); flex-shrink: 0; }
+    .nav-link.active .nav-num { color: var(--caramel); }
+
+    /* Main */
+    .main { flex: 1; padding: 64px 80px 120px 80px; min-width: 0; max-width: 860px; }
+
+    /* Hero */
+    .hero { margin-bottom: 56px; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; padding: 6px 16px; background: var(--caramel-light); border-radius: 100px; }
+    .eyebrow-text { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); }
+    .hero h1 { font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.25; color: var(--ink); margin-bottom: 20px; letter-spacing: -.01em; }
+    .hero-desc { font-size: 16px; color: var(--ink-2); line-height: 1.8; max-width: 540px; }
+    .hero-meta { margin-top: 20px; display: inline-flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink-4); }
+    .hero-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-4); }
+
+    /* Case Card */
+    .case-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 56px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .case-card-row { display: flex; align-items: baseline; gap: 20px; padding: 16px 28px; border-bottom: 1px solid var(--border); }
+    .case-card-row:first-child { padding-top: 22px; }
+    .case-card-row:last-child { border-bottom: none; padding-bottom: 22px; }
+    .case-card-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .08em; color: var(--caramel); min-width: 130px; flex-shrink: 0; }
+    .case-card-value { font-size: 15px; color: var(--ink-2); line-height: 1.65; }
+
+    /* Section */
+    .section { margin-bottom: 64px; scroll-margin-top: 24px; }
+    .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .section-num { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--surface); background: var(--caramel); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .section-title { font-family: var(--serif); font-size: 22px; font-weight: 400; color: var(--ink); }
+    .subsection { margin-bottom: 28px; }
+    .subsection-label { font-size: 13px; font-weight: 600; letter-spacing: .03em; color: var(--ink-2); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .subsection-label::before { content: ''; width: 18px; height: 2px; background: var(--caramel); border-radius: 1px; flex-shrink: 0; }
+
+    /* Prose */
+    p { margin-bottom: 16px; color: var(--ink-2); font-size: 16px; line-height: 1.85; }
+    strong { font-weight: 600; color: var(--ink); }
+    code { font-family: var(--mono); font-size: 13px; background: var(--caramel-light); color: var(--ink-2); padding: 2px 7px; border-radius: 5px; }
+    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+    li { margin-bottom: 8px; font-size: 16px; line-height: 1.8; color: var(--ink-2); }
+    li::marker { color: var(--caramel); }
+
+    /* Table */
+    .table-wrap { overflow-x: auto; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: var(--espresso); color: var(--cream); font-weight: 500; padding: 12px 18px; text-align: left; font-size: 12px; letter-spacing: .06em; }
+    tbody tr { background: var(--surface); transition: background .15s; }
+    tbody tr:nth-child(even) { background: var(--surface-warm); }
+    tbody tr:hover { background: var(--caramel-light); }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); vertical-align: top; font-size: 14px; line-height: 1.7; }
+
+    /* Code blocks */
+    pre { border-radius: var(--radius-sm); overflow-x: auto; margin-bottom: 24px; font-size: 13px; line-height: 1.7; background: var(--surface-warm); border: 1px solid var(--border); padding: 20px 24px; }
+    pre code { background: none; color: var(--ink-2); padding: 0; font-size: inherit; border-radius: 0; }
+
+    /* Callout */
+    .callout { display: flex; gap: 14px; padding: 18px 22px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 15px; line-height: 1.75; border-left: 3px solid; }
+    .callout-icon { font-size: 16px; flex-shrink: 0; line-height: 1.75; }
+    .callout-tip { background: var(--caramel-light); border-color: var(--caramel); }
+    .callout-note { background: rgba(90,60,30,0.04); border-color: var(--ink-4); }
+
+    /* Tech pills */
+    .tech-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .tech-pill { display: flex; align-items: center; gap: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 6px 16px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+    .tech-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* Bug Block */
+    .bug-block { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 24px; }
+    .bug-header { background: var(--espresso); padding: 13px 22px; display: flex; align-items: center; gap: 12px; }
+    .bug-icon { font-size: 14px; color: #e8c97a; }
+    .bug-title { font-family: var(--mono); font-size: 13px; font-weight: 500; color: #e8c97a; letter-spacing: .03em; }
+    .bug-body { background: var(--surface); padding: 22px 24px; }
+
+    /* AI Role Card */
+    .ai-role-card { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .ai-role-col { background: var(--surface); padding: 22px 24px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    .ai-role-header { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .ai-role-ai .ai-role-header { color: var(--caramel); }
+    .ai-role-human .ai-role-header { color: #6b9e6b; }
+    .ai-role-col ul { padding-left: 0; list-style: none; margin: 0; }
+    .ai-role-col li { font-size: 14px; padding: 7px 0 7px 20px; position: relative; border-bottom: 1px solid var(--border); color: var(--ink-2); line-height: 1.6; }
+    .ai-role-col li:last-child { border-bottom: none; }
+    .ai-role-ai li::before { content: "◇"; position: absolute; left: 0; color: var(--caramel); font-size: 10px; top: 10px; }
+    .ai-role-human li::before { content: "◆"; position: absolute; left: 0; color: #6b9e6b; font-size: 10px; top: 10px; }
+
+    /* Takeaway */
+    .takeaway { background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--caramel); border-radius: var(--radius-sm); padding: 28px 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(90,60,30,0.04); }
+    .takeaway-label { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--caramel); margin-bottom: 16px; }
+    .matrix-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; font-size: 15px; }
+    .matrix-arrow { color: var(--caramel); }
+    .matrix-key { color: var(--ink-3); font-size: 13px; min-width: 110px; }
+
+    /* Tree block */
+    .tree-block { background: var(--espresso); border-radius: var(--radius-sm); padding: 24px 28px; font-family: var(--mono); font-size: 13px; line-height: 2; color: var(--cream); margin-bottom: 24px; overflow-x: auto; }
+    .tq { color: #e8c97a; }
+    .ta { color: #a8d8a8; }
+    .tc { color: #9ab8d4; }
+
+    /* Footer */
+    footer { margin-top: 72px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ink-4); flex-wrap: wrap; gap: 8px; }
+
+    /* Mobile */
+    .menu-toggle { display: none; position: fixed; bottom: 24px; right: 24px; z-index: 100; background: var(--espresso); color: var(--cream); border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 20px; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(90,60,30,0.15); }
+    @media (max-width: 960px) {
+      .sidebar { position: fixed; left: -100%; top: 0; z-index: 50; transition: left .25s ease; box-shadow: 4px 0 32px rgba(90,60,30,0.1); }
+      .sidebar.open { left: 0; }
+      .main { padding: 40px 24px 80px; }
+      .hero h1 { font-size: 28px; }
+      .menu-toggle { display: flex; }
+      .ai-role-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <nav class="sidebar" id="sidebar">
+    <a class="sidebar-home" href="../">&larr; AI Notes</a>
+    <div class="sidebar-top">
+      <div class="sidebar-eyebrow">工具開發 + AI 協作</div>
+      <h2>名片系統從腳本進化到完整 Web App 的全過程</h2>
+    </div>
+    <div class="nav-section">
+      <div class="nav-group">
+        <div class="nav-group-label">章節</div>
+        <a class="nav-link" href="#s1"><span class="nav-num">01</span>需求背景</a>
+        <a class="nav-link" href="#s2"><span class="nav-num">02</span>技術選型</a>
+        <a class="nav-link" href="#s3"><span class="nav-num">03</span>功能演進紀錄</a>
+        <a class="nav-link" href="#s4"><span class="nav-num">04</span>踩坑紀錄</a>
+        <a class="nav-link" href="#s5"><span class="nav-num">05</span>AI 協作分工</a>
+        <a class="nav-link" href="#s6"><span class="nav-num">06</span>Takeaway</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <header class="hero">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-text">工具開發 + AI 協作</span>
+      </div>
+      <h1>名片系統進化：從 PDF 生成腳本到完整 Web App</h1>
+      <p class="hero-desc">用 AI 逐步把一個 Python 名片 PDF 生成腳本，進化成支援多地區、自動偵測分頁、密碼保護、RWD 表格的完整 Web 應用。</p>
+      <div class="hero-meta">
+        <span>2026-03-24</span>
+        <span class="hero-meta-dot"></span>
+        <span>工具開發 + AI 協作</span>
+      </div>
+    </header>
+
+    <!-- Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">我用 AI 做了什麼</span>
+        <span class="case-card-value">把名片 PDF 生成腳本從命令列工具進化成完整 Web App：自動偵測 Google Sheets 分頁、CMYK 精確修色、名片預覽、RWD 表格、密碼登入保護</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">沒有 AI 的話</span>
+        <span class="case-card-value">CMYK 色彩空間的 debug 至少需要半天研究 PDF 規格；Google Sheets 自動偵測分頁要花額外時間逆向工程 HTML；前端 RWD + 欄位拖曳至少 1-2 天</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最終成果</span>
+        <span class="case-card-value">完整的多地區名片生成 Web App，部署在 Vercel，支援自動同步 Google Sheets、即時預覽、密碼保護、RWD 介面</span>
+      </div>
+    </div>
+
+    <!-- S1: 需求背景 -->
+    <section class="section" id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">需求背景</h2>
+      </div>
+
+      <p>EnGenius Technologies 在全球有多個分公司（LA、APAC & India、EU、JP），每個分公司的名片格式略有不同（尤其 JP 有漢字名、東京本社地址邏輯）。原本設計師用 Illustrator 逐張製作，效率低且容易出錯。</p>
+
+      <p>目標：<strong>從 Google Sheets 讀員工資料 → 自動套用 PDF 模板 → 輸出可印刷的名片 PDF</strong>，讓非技術人員也能直接在 Web 上操作。</p>
+
+      <div class="callout callout-note">
+        <span class="callout-icon">!</span>
+        <div>這個專案跨了 3 個 session 逐步進化，從最初的 PDF 生成腳本，到多地區 Tab UI，再到這次的預覽、RWD、自動偵測分頁、密碼保護。</div>
+      </div>
+    </section>
+
+    <!-- S2: 技術選型 -->
+    <section class="section" id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">技術選型</h2>
+      </div>
+
+      <div class="tech-row">
+        <span class="tech-pill"><span class="tech-dot" style="background:#3776ab"></span>Python + Flask</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#ff6b6b"></span>PyMuPDF (fitz)</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#34a853"></span>Google Sheets CSV</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Vercel Serverless</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#e8c97a"></span>qrcode + Pillow</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>選擇</th><th>原因</th><th>替代方案</th></tr></thead>
+          <tbody>
+            <tr><td><strong>PyMuPDF 直改 PDF</strong></td><td>保留模板原有的向量圖、漸層、CMYK 色彩空間</td><td>HTML → PDF（會失去原始設計精度）</td></tr>
+            <tr><td><strong>Google Sheets CSV export</strong></td><td>免 API key、公開即可讀、非技術人員可直接編輯</td><td>Google Sheets API（需 OAuth、服務帳號）</td></tr>
+            <tr><td><strong>Vercel Serverless</strong></td><td>免費、部署快、支援 Python runtime</td><td>Railway / Render（需額外設定）</td></tr>
+            <tr><td><strong>vCard 3.0 QR Code</strong></td><td>掃碼直接新增聯絡人，相容性最好</td><td>URL QR Code（只能開網頁）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- S3: 功能演進 -->
+    <section class="section" id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">功能演進紀錄</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">自動偵測 Google Sheets 分頁</div>
+        <p>原本分頁是寫死在程式裡的 <code>SHEET_TABS</code> 字典。使用者每新增一個地區分頁就要改程式碼。</p>
+        <p>解法：抓 Google Sheets 的 <code>/htmlview</code> 公開頁面，用 regex 解析 <code>items.push({name: "March. 2026_LA", ... gid: "0"})</code> 自動取得所有分頁。</p>
+<pre><code class="language-python"># 從 htmlview 解析分頁
+url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/htmlview"
+html = urllib.request.urlopen(url).read().decode()
+matches = re.findall(r'name:\s*"([^"]+)".*?gid:\s*"(\d+)"', html)
+# → [("March. 2026_LA", "0"), ("March. 2026_APAC", "1291702676"), ...]
+
+# 取底線後面的部分作為 Tab 名稱
+for raw_name, gid in matches:
+    label = raw_name.strip().rsplit("_", 1)[-1]  # "LA", "APAC", "JP"
+</code></pre>
+        <div class="callout callout-tip">
+          <span class="callout-icon">→</span>
+          <div><strong>風險控制：</strong>htmlview 的 HTML 結構不是官方 API，Google 隨時可能改。所以保留了 <code>_FALLBACK_TABS</code> 寫死備用設定，自動偵測失敗就 fallback。</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">名片即時預覽</div>
+        <p>使用者想在批次生成前先確認單張名片的效果。做法：後端用 PyMuPDF 生成 PDF → <code>page.get_pixmap(dpi=216)</code> 轉 PNG → base64 → JSON 回傳前端顯示。</p>
+        <p>選擇 base64 JSON 而非暫存檔 URL 的原因：<strong>不需要清理暫存檔、不需要額外 route、不需要考慮 Vercel /tmp 的生命週期。</strong></p>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">RWD 響應式表格</div>
+        <p>原本表格是 <code>table-layout: fixed</code> + 固定 px 寬度，大螢幕看起來很窄、小螢幕溢出。改成：</p>
+        <ul>
+          <li><code>table-layout: auto</code> — 瀏覽器依內容自動分配欄寬</li>
+          <li>移除 <code>&lt;th&gt;</code> 的固定 px 寬度</li>
+          <li>700px 以下自動隱藏「公司 / 地址 / 網站」欄</li>
+          <li>480px 以下再隱藏「電話」欄</li>
+        </ul>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">密碼登入保護</div>
+        <p>用 Flask session + Vercel 環境變數 <code>APP_PASSWORD</code> 實作。不需要資料庫、不需要使用者管理。</p>
+<pre><code class="language-python"># webapp.py
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if APP_PASSWORD and not session.get("authenticated"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+</code></pre>
+        <div class="callout callout-note">
+          <span class="callout-icon">!</span>
+          <div>如果 <code>APP_PASSWORD</code> 沒設（空字串），login_required 會自動跳過 — 本機開發時不需要輸入密碼。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S4: 踩坑紀錄 -->
+    <section class="section" id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">踩坑紀錄</h2>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">CMYK vs RGB 色差：背面藍色區塊顏色不對</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>名片背面文字替換後，redaction 填色的藍色跟原始背景明顯不同（偏暗）</div>
+          </div>
+          <p><strong>根本原因：</strong>模板 PDF 用 CMYK 色彩空間（<code>0.95 0.26 0 0 k</code>），但 PyMuPDF 的 <code>add_redact_annot(fill=...)</code> 只接受 RGB。CMYK 轉 RGB 有色差。</p>
+<pre><code class="language-python"># 解法：redaction 不填色 + 手動注入 CMYK 指令
+page.add_redact_annot(rect, fill=False)
+page.apply_redactions(graphics=0)
+
+# 注入原生 CMYK 填色
+c, m, y, k = 0.95, 0.26, 0, 0
+cmd = f"q {c} {m} {y} {k} k {x} {pdf_y} {w} {h} re f Q"
+fitz.TOOLS._insert_contents(page, cmd.encode(), 1)  # overlay=1
+</code></pre>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>關鍵：</strong>PDF 原生座標系 y 軸朝上，PyMuPDF 朝下。轉換公式：<code>pdf_y = page_height - pymupdf_y1</code></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">CJK 字體亂碼：日文字元用 Manrope 渲染</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>日文名片上「ー」（U+30FC 長音符號）等字元顯示為方框或亂碼</div>
+          </div>
+          <p><strong>根本原因：</strong>Manrope 字體缺少 CJK 字元。解法是逐字元檢查，遇到 CJK 就切換到 NotoSansJP，同時 tracking 歸零（CJK 不需要字距調整）。</p>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Redaction graphics=0 不能省略</span>
+        </div>
+        <div class="bug-body">
+          <p><code>page.apply_redactions()</code> 預設會刪除 redact 區域內的圖片。名片背面整頁是藍色 + Logo，如果不加 <code>graphics=0</code>，Logo 圖片會被一起刪掉。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- S5: AI 協作分工 -->
+    <section class="section" id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">AI 協作分工</h2>
+      </div>
+
+      <div class="ai-role-card">
+        <div class="ai-role-col ai-role-ai">
+          <div class="ai-role-header">AI 負責</div>
+          <ul>
+            <li>PDF 內部結構分析（content stream 解析、CMYK 操作符偵測）</li>
+            <li>PyMuPDF 底層 API 使用（_insert_contents、get_drawings、Shape API）</li>
+            <li>Google Sheets htmlview 逆向工程</li>
+            <li>Flask session + login_required 裝飾器</li>
+            <li>RWD CSS 媒體查詢 + 欄位隱藏策略</li>
+            <li>前端 Tab UI pill 按鈕樣式重設計</li>
+            <li>Vercel 環境變數 + 部署指令</li>
+          </ul>
+        </div>
+        <div class="ai-role-col ai-role-human">
+          <div class="ai-role-header">人負責</div>
+          <ul>
+            <li>提供名片模板 PDF + 設計規格</li>
+            <li>截圖指出色差問題、icon 對齊問題</li>
+            <li>決定功能優先順序（先預覽、再 RWD、再密碼）</li>
+            <li>Google Sheets 資料維護</li>
+            <li>Vercel Dashboard 設定環境變數</li>
+            <li>最終品質確認（每次部署後驗收）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>提問模式：症狀描述型</strong> — 使用者提供截圖 + 描述症狀（「背景顏色不一樣」「icon 沒有對齊」），AI 從 PDF 底層結構找出根本原因。這種模式在 debug 視覺問題時特別有效。</div>
+      </div>
+    </section>
+
+    <!-- S6: Takeaway -->
+    <section class="section" id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p>一個非工程師主導的專案，透過「描述需求 → AI 實作 → 截圖驗收 → 提出修正」的循環，在幾個 session 內把 Python 腳本進化成完整 Web App。關鍵不在懂多少程式，而在能精確描述「想要什麼」和「哪裡不對」。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">可移植性</div>
+        <div class="matrix-row">
+          <span class="matrix-key">直接複製</span>
+          <span class="matrix-arrow">→</span>
+          <span>任何「從模板批次生成文件」的需求 — 證書、邀請函、報價單</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">可參考方法</span>
+          <span class="matrix-arrow">→</span>
+          <span>Google Sheets 作為非技術人員友好的資料來源 + 自動偵測分頁的 pattern</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">特殊條件</span>
+          <span class="matrix-arrow">→</span>
+          <span>CMYK 修色只在 PyMuPDF 直改 PDF 時需要，HTML→PDF 方案不會遇到</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <p><strong>起手式 1：</strong>「我有一個 PDF 模板（名片/證書/報價單），想從 Google Sheets 讀資料自動生成。請幫我用 Python + PyMuPDF 實作，要能部署到 Vercel。」</p>
+        <p><strong>起手式 2：</strong>「我的 PDF 模板是 CMYK 色彩空間，PyMuPDF 的 redaction 只支援 RGB，怎麼精確保留原始顏色？」</p>
+      </div>
+    </section>
+
+    <footer>
+      <span>整理自 AI 問答對話 · <strong>2026-03-24</strong></span>
+      <span>工具開發 + AI 協作</span>
+    </footer>
+  </main>
+</div>
+
+<button class="menu-toggle" id="menuToggle" aria-label="目錄">☰</button>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('menuToggle');
+  toggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    toggle.textContent = sidebar.classList.contains('open') ? '✕' : '☰';
+  });
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25 });
+  sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
