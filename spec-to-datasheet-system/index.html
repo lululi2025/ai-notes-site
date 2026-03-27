@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>用 AI 建立產品 DataSheet 自動生成系統（V2 全紀錄）</title>
+  <title>用 AI 建立產品 DataSheet 自動生成系統（V3 全紀錄）</title>
   <meta name="description" content="從零到完整系統：用 AI 建立支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -517,6 +517,115 @@
       margin-top: 6px;
     }
 
+    /* ── Bug Block ── */
+    .bug-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid #c06040;
+      border-radius: var(--radius-sm);
+      padding: 22px 26px;
+      margin-bottom: 20px;
+    }
+
+    .bug-block-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: #c06040;
+      margin-bottom: 10px;
+    }
+
+    .bug-block-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .bug-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      color: var(--ink-3);
+      min-width: 90px;
+      flex-shrink: 0;
+    }
+
+    .bug-value { color: var(--ink-2); }
+
+    /* ── Route Grid ── */
+    .route-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .route-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 22px 20px;
+      position: relative;
+    }
+
+    .route-card.featured {
+      border-color: var(--caramel);
+      box-shadow: 0 2px 8px rgba(192,128,64,0.10);
+    }
+
+    .route-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .10em;
+      color: var(--ink-4);
+      margin-bottom: 10px;
+    }
+
+    .route-card.featured .route-tag { color: var(--caramel); }
+
+    .route-title {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .route-subtitle {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-bottom: 14px;
+    }
+
+    .route-pros, .route-cons {
+      font-size: 13px;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+
+    .route-pros-label, .route-cons-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+
+    .route-pros-label { color: #6b9e6b; }
+    .route-cons-label { color: #c06040; }
+
+    .route-pros { color: var(--ink-2); }
+    .route-cons { color: var(--ink-3); }
+
+    @media (max-width: 960px) {
+      .route-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── Footer ── */
     footer {
       margin-top: 72px;
@@ -574,7 +683,7 @@
     <a class="sidebar-home" href="../">&larr; AI Notes</a>
     <div class="sidebar-top">
       <div class="sidebar-eyebrow">Tool Development</div>
-      <h2>EnGenius DataSheet 自動生成系統 V2 全紀錄</h2>
+      <h2>EnGenius DataSheet 自動生成系統 V3 全紀錄</h2>
     </div>
     <div class="nav-section">
       <div class="nav-group">
@@ -586,7 +695,10 @@
         <a class="nav-link" href="#s5"><span class="nav-num">05</span>核心功能拆解</a>
         <a class="nav-link" href="#s6"><span class="nav-num">06</span>開發歷程</a>
         <a class="nav-link" href="#s7"><span class="nav-num">07</span>成果總覽</a>
-        <a class="nav-link" href="#s8"><span class="nav-num">08</span>Takeaway</a>
+        <a class="nav-link" href="#s8"><span class="nav-num">08</span>V3：Web App 進化</a>
+        <a class="nav-link" href="#s9"><span class="nav-num">09</span>踩坑紀錄</a>
+        <a class="nav-link" href="#s10"><span class="nav-num">10</span>PDF 輸出方案評估</a>
+        <a class="nav-link" href="#s11"><span class="nav-num">11</span>Takeaway</a>
       </div>
     </div>
   </nav>
@@ -600,7 +712,7 @@
         <span class="eyebrow-text">工具開發</span>
       </div>
       <h1>用 AI 建立產品 DataSheet 自動生成系統</h1>
-      <p class="hero-desc">從零開始，用 AI 逐步建立一套支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具，涵蓋資料驗證、模板引擎、圖片管理、版本控制的完整系統。</p>
+      <p class="hero-desc">從零開始，用 AI 逐步建立一套支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具。從本地 CLI 進化到 Flask Web App 部署在 Vercel，同事可自行預覽並存成 PDF。</p>
       <div class="hero-meta">
         <span>2025-12 ~ 2026-03</span>
         <span class="hero-meta-dot"></span>
@@ -612,15 +724,15 @@
     <div class="case-card">
       <div class="case-card-row">
         <span class="case-card-label">我用 AI 做了什麼</span>
-        <span class="case-card-value">用 AI 建立完整的 DataSheet 自動生成系統：Pydantic 資料模型、Jinja2 HTML 模板、Playwright PDF 渲染、Google Drive 圖片管理、自動版本控制，支援 3 大產品線 8 款產品</span>
+        <span class="case-card-value">跨 5 個 session 用 AI 建立完整的產品 DataSheet 自動生成系統，從本地 CLI 工具進化到 Vercel Web App，支援 Camera / AP / Switch 三大產品線，同事可自行預覽並存成 PDF</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">沒有 AI 的話</span>
-        <span class="case-card-value">每份 DataSheet 需要設計師用 InDesign 手動排版 3-5 小時，每次規格變更都要重新排版。8 款產品 x 多次改版 = 數百小時人工</span>
+        <span class="case-card-value">光是逆向工程 PDF 模板、寫 HTML/CSS 版型、串接 Google Sheets 三個不同格式的試算表，估計需要 2-3 週全職工作</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">最終成果</span>
-        <span class="case-card-value">完整 Python 系統（20+ 檔案），已產出 17 份品牌 PDF。新增一款產品只需準備 JSON + 圖片，一行指令即可生成</span>
+        <span class="case-card-value">已部署的 Web App（datasheet-system.vercel.app），自動讀取 50+ 個產品規格，一鍵預覽和存 PDF</span>
       </div>
     </div>
 
@@ -910,6 +1022,11 @@ python generate_datasheet.py ECW220
               <td>2026-03</td>
               <td>完善系統文件：README、使用指南、Excel 欄位說明、圖片命名規則</td>
             </tr>
+            <tr>
+              <td><strong>V3 - Web App</strong></td>
+              <td>2026-03</td>
+              <td>重建為 Flask Web App 部署到 Vercel。改用 Google Sheets CSV export 讀取資料，新增 Dashboard 分頁籤、Save as PDF、多產品線自動解析（Camera/AP/Switch 三種 Sheet 格式）</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -959,16 +1076,16 @@ python generate_datasheet.py ECW220
           <div class="stat-label">產品線</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">8</div>
+          <div class="stat-number">50+</div>
           <div class="stat-label">產品型號</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">17</div>
-          <div class="stat-label">PDF 產出</div>
+          <div class="stat-number">5</div>
+          <div class="stat-label">AI Sessions</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">20+</div>
-          <div class="stat-label">系統檔案</div>
+          <div class="stat-number">28</div>
+          <div class="stat-label">Git Commits</div>
         </div>
       </div>
 
@@ -998,10 +1115,239 @@ python generate_datasheet.py ECW220
       </div>
     </section>
 
-    <!-- Section 8: Takeaway -->
+    <!-- Section 8: V3 Web App -->
     <section class="section" id="s8">
       <div class="section-header">
         <span class="section-num">08</span>
+        <h2 class="section-title">V3：從 CLI 到 Web App</h2>
+      </div>
+
+      <p>V2 系統雖然能自動生成 PDF，但操作者需要在本地安裝 Python、Playwright 等工具，對行銷同事來說門檻太高。V3 的目標是讓任何人只需要打開網頁就能預覽和下載 DataSheet。</p>
+
+      <div class="tech-row">
+        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Flask</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#B41717"></span>Jinja2</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#E8503A"></span>Pydantic</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#34A853"></span>Google Sheets</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Vercel</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#3776AB"></span>Pillow</span>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">V2 vs V3 架構比較</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>項目</th><th>V2（本地 CLI）</th><th>V3（Web App）</th></tr></thead>
+          <tbody>
+            <tr><td>資料來源</td><td>JSON / Excel 檔案</td><td>Google Sheets CSV export（不需 API key）</td></tr>
+            <tr><td>PDF 引擎</td><td>Playwright（Chromium）</td><td>瀏覽器列印（計畫改 html2pdf.js）</td></tr>
+            <tr><td>圖片來源</td><td>Google Drive 下載到本地</td><td>Google Drive API + Service Account</td></tr>
+            <tr><td>操作方式</td><td>CLI 指令</td><td>Web UI（Dashboard + Preview）</td></tr>
+            <tr><td>部署</td><td>本地執行</td><td>Vercel（GitHub push 自動部署）</td></tr>
+            <tr><td>產品數</td><td>8 個（手動建 JSON）</td><td>50+ 個（自動從 Sheets 讀取）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">系統流程</div>
+      </div>
+
+      <div class="tree-block">
+<span class="tq">V3 資料流</span>
+│
+├── <span class="tc">Google Sheets（3 個試算表）</span>
+│   ├── Cloud Camera Sheet  <span class="ta">→ CSV export</span>
+│   ├── Cloud AP Sheet      <span class="ta">→ CSV export</span>
+│   └── Cloud Switch Sheet  <span class="ta">→ CSV export</span>
+│
+├── <span class="tc">Flask App (app.py)</span>
+│   ├── sheets_reader.py    <span class="ta">← 解析 CSV，處理不同格式</span>
+│   ├── pdf_generator.py    <span class="ta">← Jinja2 渲染 HTML</span>
+│   └── drive_images.py     <span class="ta">← Google Drive 圖片代理</span>
+│
+├── <span class="tc">Web UI</span>
+│   ├── Dashboard            <span class="ta">← 產品列表 + 分頁籤</span>
+│   ├── Product Page         <span class="ta">← 規格摘要 + Save as PDF</span>
+│   └── Preview              <span class="ta">← 完整 HTML DataSheet</span>
+│
+└── <span class="tc">Vercel 部署</span>
+    └── datasheet-system.vercel.app
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">Google Sheets 格式差異（最大挑戰）</div>
+      </div>
+
+      <p>三條產品線的 Google Sheet 結構看似相似，實際上格式完全不同。這是 V3 開發中最耗時的部分：</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>差異項</th><th>Camera</th><th>Switch</th><th>AP</th></tr></thead>
+          <tbody>
+            <tr><td>Features 格式</td><td><code>* feature text</code></td><td><code>- feature text</code></td><td>純文字換行</td></tr>
+            <tr><td>Overview 欄位</td><td>Single Overview</td><td>Highlights/Single Overview</td><td>Highlights/Single Overview</td></tr>
+            <tr><td>產品描述</td><td>Model Description</td><td>Excerpt (Headline)</td><td>Excerpt (Headline)</td></tr>
+            <tr><td>規格分類</td><td>明確 category 名稱</td><td>空值行當分隔線</td><td>混合使用</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>解決方式：</strong>解析器同時處理 <code>*</code>、<code>-</code>、純文字三種 feature 格式；新增空值行自動偵測為 category header；用多個候選欄位名逐一嘗試匹配。</div>
+      </div>
+    </section>
+
+    <!-- Section 9: 踩坑紀錄 -->
+    <section class="section" id="s9">
+      <div class="section-header">
+        <span class="section-num">09</span>
+        <h2 class="section-title">踩坑紀錄（V3）</h2>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：WeasyPrint macOS SIP 限制</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong><code>OSError: cannot load library 'libgobject-2.0-0'</code></div>
+          </div>
+          <p><strong>根本原因：</strong>macOS 系統 Python 3.9 因 SIP（System Integrity Protection）限制，無法動態載入 Homebrew 安裝的 C 函式庫。</p>
+          <p><strong>解法：</strong>用 Homebrew Python 3.14 建立 venv：<code>.venv/bin/python</code></p>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防：</strong>macOS 上使用需要原生 C 函式庫的 Python 套件時，一律用 Homebrew Python 建 venv。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：Google Sheets 各產品線格式不一致</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>Switch 和 AP 的 features 回傳 0 筆、specs 也回傳 0 筆，但 Camera 正常。</div>
+          </div>
+          <p><strong>根本原因：</strong>Camera 用 <code>* </code> 分隔 features，Switch 用 <code>- </code>，AP 純文字換行。Switch 的 category headers 用空值行當分隔線，不在已知的 <code>SPEC_CATEGORIES</code> 集合中。</p>
+          <p><strong>解法：</strong>解析器改成同時處理三種格式；新增空值行自動偵測邏輯；擴充 <code>SPEC_CATEGORIES</code> 集合。</p>
+          <div class="callout callout-tip">
+            <span class="callout-icon">→</span>
+            <div><strong>預防：</strong>串接新的 Google Sheet 前，先用 <code>_fetch_csv()</code> 印出前 20 行看結構，不要假設格式跟現有的一樣。</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：Vercel deploy blocked</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>"The Deployment was blocked because GitHub could not associate the committer with a GitHub user"</div>
+          </div>
+          <p><strong>根本原因：</strong>Git commit email 不對應 GitHub 帳號，Vercel 的 GitHub integration 會拒絕部署。</p>
+          <p><strong>解法：</strong><code>git config user.email "194753981+lululi2025@users.noreply.github.com"</code> 或用 <code>vercel deploy --prod --yes</code> CLI 直接部署繞過。</p>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：UTF-8 亂碼</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>規格值出現 <code>Â°</code> 而非 <code>°</code>，<code>â</code> 而非 <code>″</code></div>
+          </div>
+          <p><strong>根本原因：</strong>Google Sheets CSV export 的 encoding 問題，<code>resp.text</code> 可能用錯誤的編碼解碼。</p>
+          <p><strong>解法：</strong>明確使用 <code>resp.content.decode("utf-8")</code> 而非 <code>resp.text</code>。</p>
+        </div>
+      </div>
+
+      <div class="bug-block">
+        <div class="bug-header">
+          <span class="bug-icon">⚠</span>
+          <span class="bug-title">Bug：PDF ≠ HTML 預覽（待解）</span>
+        </div>
+        <div class="bug-body">
+          <div class="callout callout-note">
+            <span class="callout-icon">!</span>
+            <div><strong>症狀：</strong>瀏覽器存成 PDF 後，背景色消失、邊距不對、分頁斷裂。</div>
+          </div>
+          <p><strong>根本原因：</strong>瀏覽器列印功能會自動加 header/footer、調整邊距、預設不印背景色。使用者需要手動勾選「背景圖形」並取消勾選「頁首頁尾」，體驗不佳。</p>
+          <p><strong>狀態：</strong>待解。計畫改用 html2pdf.js（客戶端截圖式）或外部 PDF API。詳見下一章節的方案評估。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10: PDF 方案評估 -->
+    <section class="section" id="s10">
+      <div class="section-header">
+        <span class="section-num">10</span>
+        <h2 class="section-title">PDF 輸出方案評估</h2>
+      </div>
+
+      <p>V3 目前用瀏覽器列印存 PDF，跟 HTML 預覽有差異。以下是評估過的替代方案：</p>
+
+      <div class="route-grid">
+        <div class="route-card featured">
+          <span class="rec-badge">推薦</span>
+          <div class="route-tag">CLIENT-SIDE</div>
+          <div class="route-title">html2pdf.js</div>
+          <div class="route-subtitle">客戶端截圖式 PDF</div>
+          <div class="route-pros-label">PROS</div>
+          <div class="route-pros">跟預覽完全一致、免費、不需後端、可在 Vercel 用</div>
+          <div class="route-cons-label">CONS</div>
+          <div class="route-cons">文字不可選取、大檔案較慢</div>
+        </div>
+        <div class="route-card">
+          <div class="route-tag">EXTERNAL API</div>
+          <div class="route-title">PDFShift / DocRaptor</div>
+          <div class="route-subtitle">Server-side 精確渲染</div>
+          <div class="route-pros-label">PROS</div>
+          <div class="route-pros">文字可選取、品質最高、跟預覽一致</div>
+          <div class="route-cons-label">CONS</div>
+          <div class="route-cons">有成本（免費額度有限）</div>
+        </div>
+        <div class="route-card">
+          <div class="route-tag">SELF-HOSTED</div>
+          <div class="route-title">Railway + Playwright</div>
+          <div class="route-subtitle">完全自主控制</div>
+          <div class="route-pros-label">PROS</div>
+          <div class="route-pros">品質最高、完全一致、文字可選取</div>
+          <div class="route-cons-label">CONS</div>
+          <div class="route-cons">需換部署平台、Docker 設定、不再免費</div>
+        </div>
+      </div>
+
+      <div class="tree-block">
+<span class="tq">PDF 跟預覽要一致嗎？</span>
+├── <span class="ta">不需要</span> → 修好 @media print CSS（免費，最快）
+└── <span class="tq">需要</span>
+    ├── <span class="tq">文字要可選取嗎？</span>
+    │   ├── <span class="ta">不需要</span> → html2pdf.js（免費，最簡單）
+    │   └── <span class="tq">需要</span>
+    │       ├── <span class="ta">預算有限</span> → PDFShift 免費額度（每月 50 份）
+    │       └── <span class="ta">量大或要自主</span> → Railway + Playwright
+      </div>
+    </section>
+
+    <!-- Section 11: Takeaway -->
+    <section class="section" id="s11">
+      <div class="section-header">
+        <span class="section-num">11</span>
         <h2 class="section-title">Takeaway</h2>
       </div>
 
@@ -1031,6 +1377,11 @@ python generate_datasheet.py ECW220
           <span class="matrix-key">版本自動化</span>
           <span class="matrix-arrow">→</span>
           <span>避免手動追蹤版本號，減少人為錯誤</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">V3 核心轉折</span>
+          <span class="matrix-arrow">→</span>
+          <span>從「開發者工具」進化為「團隊自助工具」，重心從 PDF 品質轉到使用者體驗</span>
         </div>
       </div>
 
