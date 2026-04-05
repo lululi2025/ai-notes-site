@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>用 AI 建立產品 DataSheet 自動生成系統（V3 全紀錄）</title>
+  <title>用 AI 建立產品 DataSheet 自動生成系統（V2 → V3 全紀錄）</title>
   <meta name="description" content="從零到完整系統：用 AI 建立支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=Noto+Sans+TC:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -149,6 +149,12 @@
     }
 
     .nav-link.active .nav-num { color: var(--caramel); }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border-strong);
+      margin: 20px 10px 8px;
+    }
 
     /* ── Main ── */
     .main {
@@ -517,6 +523,42 @@
       margin-top: 6px;
     }
 
+    /* ── Part Divider ── */
+    .part-divider {
+      margin: 80px 0 56px;
+      padding: 48px 0;
+      border-top: 2px solid var(--latte);
+      border-bottom: 2px solid var(--latte);
+      text-align: center;
+    }
+
+    .part-divider-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 6px 16px;
+      background: var(--caramel-mid);
+      border-radius: 100px;
+    }
+
+    .part-divider h2 {
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--ink);
+      margin-bottom: 14px;
+      letter-spacing: -.01em;
+    }
+
+    .part-divider p {
+      font-size: 15px;
+      color: var(--ink-3);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+
     /* ── Bug Block ── */
     .bug-block {
       background: var(--surface);
@@ -622,10 +664,6 @@
     .route-pros { color: var(--ink-2); }
     .route-cons { color: var(--ink-3); }
 
-    @media (max-width: 960px) {
-      .route-grid { grid-template-columns: 1fr; }
-    }
-
     /* ── Footer ── */
     footer {
       margin-top: 72px;
@@ -672,6 +710,7 @@
       .menu-toggle { display: flex; }
       .ai-role-card { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .route-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -683,11 +722,11 @@
     <a class="sidebar-home" href="../">&larr; AI Notes</a>
     <div class="sidebar-top">
       <div class="sidebar-eyebrow">Tool Development</div>
-      <h2>EnGenius DataSheet 自動生成系統 V3 全紀錄</h2>
+      <h2>EnGenius DataSheet 自動生成系統</h2>
     </div>
     <div class="nav-section">
       <div class="nav-group">
-        <div class="nav-group-label">章節</div>
+        <div class="nav-group-label">V2：本地 CLI 系統</div>
         <a class="nav-link" href="#s1"><span class="nav-num">01</span>專案目標</a>
         <a class="nav-link" href="#s2"><span class="nav-num">02</span>系統架構</a>
         <a class="nav-link" href="#s3"><span class="nav-num">03</span>技術選型</a>
@@ -695,10 +734,15 @@
         <a class="nav-link" href="#s5"><span class="nav-num">05</span>核心功能拆解</a>
         <a class="nav-link" href="#s6"><span class="nav-num">06</span>開發歷程</a>
         <a class="nav-link" href="#s7"><span class="nav-num">07</span>成果總覽</a>
-        <a class="nav-link" href="#s8"><span class="nav-num">08</span>V3：Web App 進化</a>
-        <a class="nav-link" href="#s9"><span class="nav-num">09</span>踩坑紀錄</a>
-        <a class="nav-link" href="#s10"><span class="nav-num">10</span>PDF 輸出方案評估</a>
-        <a class="nav-link" href="#s11"><span class="nav-num">11</span>Takeaway</a>
+        <a class="nav-link" href="#s8"><span class="nav-num">08</span>Takeaway</a>
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-group">
+        <div class="nav-group-label">V3：Web App 進化</div>
+        <a class="nav-link" href="#v3s1"><span class="nav-num">01</span>Web App 進化</a>
+        <a class="nav-link" href="#v3s2"><span class="nav-num">02</span>踩坑紀錄</a>
+        <a class="nav-link" href="#v3s3"><span class="nav-num">03</span>PDF 方案評估</a>
+        <a class="nav-link" href="#v3s4"><span class="nav-num">04</span>V3 Takeaway</a>
       </div>
     </div>
   </nav>
@@ -712,7 +756,7 @@
         <span class="eyebrow-text">工具開發</span>
       </div>
       <h1>用 AI 建立產品 DataSheet 自動生成系統</h1>
-      <p class="hero-desc">從零開始，用 AI 逐步建立一套支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具。從本地 CLI 進化到 Flask Web App 部署在 Vercel，同事可自行預覽並存成 PDF。</p>
+      <p class="hero-desc">從零開始，用 AI 逐步建立一套支援 WiFi AP、Switch、Camera 三大產品線的品牌 DataSheet PDF 自動生成工具，涵蓋資料驗證、模板引擎、圖片管理、版本控制的完整系統。</p>
       <div class="hero-meta">
         <span>2025-12 ~ 2026-03</span>
         <span class="hero-meta-dot"></span>
@@ -724,15 +768,15 @@
     <div class="case-card">
       <div class="case-card-row">
         <span class="case-card-label">我用 AI 做了什麼</span>
-        <span class="case-card-value">跨 5 個 session 用 AI 建立完整的產品 DataSheet 自動生成系統，從本地 CLI 工具進化到 Vercel Web App，支援 Camera / AP / Switch 三大產品線，同事可自行預覽並存成 PDF</span>
+        <span class="case-card-value">用 AI 建立完整的 DataSheet 自動生成系統：Pydantic 資料模型、Jinja2 HTML 模板、Playwright PDF 渲染、Google Drive 圖片管理、自動版本控制，支援 3 大產品線 8 款產品</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">沒有 AI 的話</span>
-        <span class="case-card-value">光是逆向工程 PDF 模板、寫 HTML/CSS 版型、串接 Google Sheets 三個不同格式的試算表，估計需要 2-3 週全職工作</span>
+        <span class="case-card-value">每份 DataSheet 需要設計師用 InDesign 手動排版 3-5 小時，每次規格變更都要重新排版。8 款產品 x 多次改版 = 數百小時人工</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">最終成果</span>
-        <span class="case-card-value">已部署的 Web App（datasheet-system.vercel.app），自動讀取 50+ 個產品規格，一鍵預覽和存 PDF</span>
+        <span class="case-card-value">完整 Python 系統（20+ 檔案），已產出 17 份品牌 PDF。新增一款產品只需準備 JSON + 圖片，一行指令即可生成</span>
       </div>
     </div>
 
@@ -1022,11 +1066,6 @@ python generate_datasheet.py ECW220
               <td>2026-03</td>
               <td>完善系統文件：README、使用指南、Excel 欄位說明、圖片命名規則</td>
             </tr>
-            <tr>
-              <td><strong>V3 - Web App</strong></td>
-              <td>2026-03</td>
-              <td>重建為 Flask Web App 部署到 Vercel。改用 Google Sheets CSV export 讀取資料，新增 Dashboard 分頁籤、Save as PDF、多產品線自動解析（Camera/AP/Switch 三種 Sheet 格式）</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -1076,16 +1115,16 @@ python generate_datasheet.py ECW220
           <div class="stat-label">產品線</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">50+</div>
+          <div class="stat-number">8</div>
           <div class="stat-label">產品型號</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">5</div>
-          <div class="stat-label">AI Sessions</div>
+          <div class="stat-number">17</div>
+          <div class="stat-label">PDF 產出</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">28</div>
-          <div class="stat-label">Git Commits</div>
+          <div class="stat-number">20+</div>
+          <div class="stat-label">系統檔案</div>
         </div>
       </div>
 
@@ -1115,11 +1154,113 @@ python generate_datasheet.py ECW220
       </div>
     </section>
 
-    <!-- Section 8: V3 Web App -->
+    <!-- Section 8: Takeaway -->
     <section class="section" id="s8">
       <div class="section-header">
         <span class="section-num">08</span>
-        <h2 class="section-title">V3：從 CLI 到 Web App</h2>
+        <h2 class="section-title">Takeaway</h2>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">這個案例展示了什麼</div>
+        <p>用 AI 不只是完成單次任務，而是<strong>建立一套可重複使用的系統</strong>。從第一份 AP DataSheet 開始，每次擴展新產品線時，AI 都能理解既有架構，快速複製模式並針對新需求做調整。最終形成的系統讓非技術人員也能自行維護和產出 DataSheet。</p>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">系統設計的關鍵決策</div>
+        <div class="matrix-row">
+          <span class="matrix-key">JSON over DB</span>
+          <span class="matrix-arrow">→</span>
+          <span>用 JSON 檔案而非資料庫，降低部署門檻，行銷人員可直接編輯</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">HTML over LaTeX</span>
+          <span class="matrix-arrow">→</span>
+          <span>用 HTML/CSS 做模板，任何人都能調整版面，不需學 LaTeX</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">模組化設計</span>
+          <span class="matrix-arrow">→</span>
+          <span>每個產品線獨立模型/模板，新增產品線不影響現有系統</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">版本自動化</span>
+          <span class="matrix-arrow">→</span>
+          <span>避免手動追蹤版本號，減少人為錯誤</span>
+        </div>
+      </div>
+
+      <div class="takeaway">
+        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 1</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我需要自動生成 [產品類型] 的 DataSheet PDF，規格資料在 [來源]，請建立完整的生成系統」</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 2</span>
+          <span class="matrix-arrow">→</span>
+          <span>「我已經有 [既有產品] 的 DataSheet 系統，現在要擴展到 [新產品線]，請參考現有架構建立新的模型和模板」</span>
+        </div>
+        <div class="matrix-row">
+          <span class="matrix-key">起手式 3</span>
+          <span class="matrix-arrow">→</span>
+          <span>「這個 Excel/Google Sheet [URL] 有產品規格，請讀取並轉換成我的 DataSheet 系統能用的 JSON 格式」</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- V3 DIVIDER -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div class="part-divider">
+      <div class="part-divider-eyebrow">
+        <span class="eyebrow-text">Part 2</span>
+      </div>
+      <h2>V3：從 CLI 到 Web App</h2>
+      <p>V2 完成了本地 CLI 系統。接下來的 V3 將系統重建為 Flask Web App 並部署到 Vercel，讓同事可以直接透過瀏覽器預覽和存 PDF。</p>
+    </div>
+
+    <!-- V3 Case Card -->
+    <div class="case-card">
+      <div class="case-card-row">
+        <span class="case-card-label">V3 做了什麼</span>
+        <span class="case-card-value">跨 5 個 AI session 將本地 CLI 工具進化到 Vercel Web App，支援 Camera / AP / Switch 三大產品線，同事可自行預覽並存成 PDF</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">最大挑戰</span>
+        <span class="case-card-value">三條產品線的 Google Sheet 格式完全不同（features、欄位名、category 分隔方式），解析器需要同時處理三種格式</span>
+      </div>
+      <div class="case-card-row">
+        <span class="case-card-label">V3 成果</span>
+        <span class="case-card-value">已部署的 Web App（datasheet-system.vercel.app），自動讀取 50+ 個產品規格，一鍵預覽和存 PDF</span>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number">50+</div>
+        <div class="stat-label">產品型號</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">AI Sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">28</div>
+        <div class="stat-label">Git Commits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">Vercel</div>
+        <div class="stat-label">部署平台</div>
+      </div>
+    </div>
+
+    <!-- V3 Section 1: Web App 進化 -->
+    <section class="section" id="v3s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">V3 Web App 進化</h2>
       </div>
 
       <p>V2 系統雖然能自動生成 PDF，但操作者需要在本地安裝 Python、Playwright 等工具，對行銷同事來說門檻太高。V3 的目標是讓任何人只需要打開網頁就能預覽和下載 DataSheet。</p>
@@ -1201,10 +1342,10 @@ python generate_datasheet.py ECW220
       </div>
     </section>
 
-    <!-- Section 9: 踩坑紀錄 -->
-    <section class="section" id="s9">
+    <!-- V3 Section 2: 踩坑紀錄 -->
+    <section class="section" id="v3s2">
       <div class="section-header">
-        <span class="section-num">09</span>
+        <span class="section-num">02</span>
         <h2 class="section-title">踩坑紀錄（V3）</h2>
       </div>
 
@@ -1292,10 +1433,10 @@ python generate_datasheet.py ECW220
       </div>
     </section>
 
-    <!-- Section 10: PDF 方案評估 -->
-    <section class="section" id="s10">
+    <!-- V3 Section 3: PDF 方案評估 -->
+    <section class="section" id="v3s3">
       <div class="section-header">
-        <span class="section-num">10</span>
+        <span class="section-num">03</span>
         <h2 class="section-title">PDF 輸出方案評估</h2>
       </div>
 
@@ -1344,63 +1485,58 @@ python generate_datasheet.py ECW220
       </div>
     </section>
 
-    <!-- Section 11: Takeaway -->
-    <section class="section" id="s11">
+    <!-- V3 Section 4: V3 Takeaway -->
+    <section class="section" id="v3s4">
       <div class="section-header">
-        <span class="section-num">11</span>
-        <h2 class="section-title">Takeaway</h2>
+        <span class="section-num">04</span>
+        <h2 class="section-title">V3 Takeaway</h2>
       </div>
 
       <div class="takeaway">
-        <div class="takeaway-label">這個案例展示了什麼</div>
-        <p>用 AI 不只是完成單次任務，而是<strong>建立一套可重複使用的系統</strong>。從第一份 AP DataSheet 開始，每次擴展新產品線時，AI 都能理解既有架構，快速複製模式並針對新需求做調整。最終形成的系統讓非技術人員也能自行維護和產出 DataSheet。</p>
+        <div class="takeaway-label">V3 的核心轉折</div>
+        <p>V3 的重心從<strong>「PDF 品質」轉到「使用者體驗」</strong>。V2 是開發者工具，V3 是團隊自助工具。最大的挑戰不是技術本身，而是三條產品線的 Google Sheet 格式完全不統一，解析器需要足夠彈性來處理各種邊界情況。</p>
       </div>
 
       <div class="takeaway">
-        <div class="takeaway-label">系統設計的關鍵決策</div>
+        <div class="takeaway-label">Web 部署的關鍵學習</div>
         <div class="matrix-row">
-          <span class="matrix-key">JSON over DB</span>
+          <span class="matrix-key">Vercel 限制</span>
           <span class="matrix-arrow">→</span>
-          <span>用 JSON 檔案而非資料庫，降低部署門檻，行銷人員可直接編輯</span>
+          <span>不支援原生 C 函式庫（WeasyPrint）和大型套件（Playwright >250MB），PDF 方案受限</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">HTML over LaTeX</span>
+          <span class="matrix-key">CSV over API</span>
           <span class="matrix-arrow">→</span>
-          <span>用 HTML/CSS 做模板，任何人都能調整版面，不需學 LaTeX</span>
+          <span>Google Sheets CSV export 免 API key、免 OAuth，適合公開讀取的場景</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">模組化設計</span>
+          <span class="matrix-key">格式不統一</span>
           <span class="matrix-arrow">→</span>
-          <span>每個產品線獨立模型/模板，新增產品線不影響現有系統</span>
+          <span>同一家公司的三個 Sheet 格式完全不同，永遠不要假設「格式應該一樣」</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">版本自動化</span>
+          <span class="matrix-key">Git 身份驗證</span>
           <span class="matrix-arrow">→</span>
-          <span>避免手動追蹤版本號，減少人為錯誤</span>
-        </div>
-        <div class="matrix-row">
-          <span class="matrix-key">V3 核心轉折</span>
-          <span class="matrix-arrow">→</span>
-          <span>從「開發者工具」進化為「團隊自助工具」，重心從 PDF 品質轉到使用者體驗</span>
+          <span>Vercel GitHub integration 會驗證 commit email，必須對應 GitHub 帳號</span>
         </div>
       </div>
 
       <div class="takeaway">
-        <div class="takeaway-label">如果你也要做，先問 AI 什麼</div>
+        <div class="takeaway-label">多格式資料處理的教訓</div>
         <div class="matrix-row">
-          <span class="matrix-key">起手式 1</span>
+          <span class="matrix-key">先看資料</span>
           <span class="matrix-arrow">→</span>
-          <span>「我需要自動生成 [產品類型] 的 DataSheet PDF，規格資料在 [來源]，請建立完整的生成系統」</span>
+          <span>串接新資料源前，先印出 raw data 看結構，不要假設格式</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">起手式 2</span>
+          <span class="matrix-key">防禦性解析</span>
           <span class="matrix-arrow">→</span>
-          <span>「我已經有 [既有產品] 的 DataSheet 系統，現在要擴展到 [新產品線]，請參考現有架構建立新的模型和模板」</span>
+          <span>用多個候選欄位名嘗試匹配，而非硬編碼單一欄位名</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">起手式 3</span>
+          <span class="matrix-key">明確 encoding</span>
           <span class="matrix-arrow">→</span>
-          <span>「這個 Excel/Google Sheet [URL] 有產品規格，請讀取並轉換成我的 DataSheet 系統能用的 JSON 格式」</span>
+          <span>永遠用 <code>resp.content.decode("utf-8")</code>，不要相信 <code>resp.text</code> 的自動偵測</span>
         </div>
       </div>
     </section>
