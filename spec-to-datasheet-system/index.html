@@ -559,45 +559,6 @@
       line-height: 1.8;
     }
 
-    /* ── Bug Block ── */
-    .bug-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid #c06040;
-      border-radius: var(--radius-sm);
-      padding: 22px 26px;
-      margin-bottom: 20px;
-    }
-
-    .bug-block-title {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 500;
-      color: #c06040;
-      margin-bottom: 10px;
-    }
-
-    .bug-block-row {
-      display: flex;
-      align-items: baseline;
-      gap: 10px;
-      margin-bottom: 6px;
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    .bug-label {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .06em;
-      color: var(--ink-3);
-      min-width: 90px;
-      flex-shrink: 0;
-    }
-
-    .bug-value { color: var(--ink-2); }
-
     /* ── Route Grid ── */
     .route-grid {
       display: grid;
@@ -739,9 +700,9 @@
       <div class="nav-divider"></div>
       <div class="nav-group">
         <div class="nav-group-label">V3：Web App 進化</div>
-        <a class="nav-link" href="#v3s1"><span class="nav-num">01</span>Web App 進化</a>
-        <a class="nav-link" href="#v3s2"><span class="nav-num">02</span>踩坑紀錄</a>
-        <a class="nav-link" href="#v3s3"><span class="nav-num">03</span>PDF 方案評估</a>
+        <a class="nav-link" href="#v3s1"><span class="nav-num">01</span>為什麼要做 V3</a>
+        <a class="nav-link" href="#v3s2"><span class="nav-num">02</span>怎麼做的</a>
+        <a class="nav-link" href="#v3s3"><span class="nav-num">03</span>遇到的困難</a>
         <a class="nav-link" href="#v3s4"><span class="nav-num">04</span>V3 Takeaway</a>
       </div>
     </div>
@@ -1218,18 +1179,18 @@ python generate_datasheet.py ECW220
         <span class="eyebrow-text">Part 2</span>
       </div>
       <h2>V3：從 CLI 到 Web App</h2>
-      <p>V2 完成了本地 CLI 系統。接下來的 V3 將系統重建為 Flask Web App 並部署到 Vercel，讓同事可以直接透過瀏覽器預覽和存 PDF。</p>
+      <p>V2 用 Playwright 在本地產 PDF，操作者需要安裝 Python 環境。V3 的目標是讓同事打開瀏覽器就能用——不需要裝任何東西。</p>
     </div>
 
     <!-- V3 Case Card -->
     <div class="case-card">
       <div class="case-card-row">
         <span class="case-card-label">V3 做了什麼</span>
-        <span class="case-card-value">跨 5 個 AI session 將本地 CLI 工具進化到 Vercel Web App，支援 Camera / AP / Switch 三大產品線，同事可自行預覽並存成 PDF</span>
+        <span class="case-card-value">把本地 CLI 工具重建為 Flask Web App，部署到 Vercel，同事打開網址就能預覽所有產品的 DataSheet 並存成 PDF</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">最大挑戰</span>
-        <span class="case-card-value">三條產品線的 Google Sheet 格式完全不同（features、欄位名、category 分隔方式），解析器需要同時處理三種格式</span>
+        <span class="case-card-value">三條產品線的 Google Sheet 格式完全不同，解析器需要同時處理三種結構；Vercel 無法跑 Playwright，PDF 方案受限</span>
       </div>
       <div class="case-card-row">
         <span class="case-card-label">V3 成果</span>
@@ -1243,35 +1204,33 @@ python generate_datasheet.py ECW220
         <div class="stat-label">產品型號</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">5</div>
-        <div class="stat-label">AI Sessions</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">28</div>
-        <div class="stat-label">Git Commits</div>
+        <div class="stat-number">3</div>
+        <div class="stat-label">產品線</div>
       </div>
       <div class="stat-card">
         <div class="stat-number">Vercel</div>
         <div class="stat-label">部署平台</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-number">0</div>
+        <div class="stat-label">需安裝的東西</div>
+      </div>
     </div>
 
-    <!-- V3 Section 1: Web App 進化 -->
+    <!-- V3 Section 1: 為什麼要做 V3 -->
     <section class="section" id="v3s1">
       <div class="section-header">
         <span class="section-num">01</span>
-        <h2 class="section-title">V3 Web App 進化</h2>
+        <h2 class="section-title">為什麼要做 V3</h2>
       </div>
 
-      <p>V2 系統雖然能自動生成 PDF，但操作者需要在本地安裝 Python、Playwright 等工具，對行銷同事來說門檻太高。V3 的目標是讓任何人只需要打開網頁就能預覽和下載 DataSheet。</p>
+      <p>V2 能自動產 PDF，但整套系統跑在本地——要裝 Python、Playwright、Chromium，行銷同事根本不可能自己操作。每次有人要看 DataSheet 預覽，還是得找我跑一次指令。</p>
 
-      <div class="tech-row">
-        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Flask</span>
-        <span class="tech-pill"><span class="tech-dot" style="background:#B41717"></span>Jinja2</span>
-        <span class="tech-pill"><span class="tech-dot" style="background:#E8503A"></span>Pydantic</span>
-        <span class="tech-pill"><span class="tech-dot" style="background:#34A853"></span>Google Sheets</span>
-        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Vercel</span>
-        <span class="tech-pill"><span class="tech-dot" style="background:#3776AB"></span>Pillow</span>
+      <p>另一個問題是資料來源。V2 的產品規格用 JSON 檔案存在本地，每次規格有更新就要手動改 JSON。但公司的產品規格其實都維護在 Google Sheets 上，如果能直接讀 Sheets，就不用再手動同步資料。</p>
+
+      <div class="callout callout-tip">
+        <span class="callout-icon">→</span>
+        <div><strong>V3 的目標很簡單：</strong>同事打開一個網址，就能看到所有產品的 DataSheet，選好產品按一個按鈕就能存 PDF。不需要裝任何東西。</div>
       </div>
 
       <div class="subsection">
@@ -1282,14 +1241,33 @@ python generate_datasheet.py ECW220
         <table>
           <thead><tr><th>項目</th><th>V2（本地 CLI）</th><th>V3（Web App）</th></tr></thead>
           <tbody>
-            <tr><td>資料來源</td><td>JSON / Excel 檔案</td><td>Google Sheets CSV export（不需 API key）</td></tr>
-            <tr><td>PDF 引擎</td><td>Playwright（Chromium）</td><td>瀏覽器列印（計畫改 html2pdf.js）</td></tr>
+            <tr><td>資料來源</td><td>JSON 檔案（手動維護）</td><td>Google Sheets CSV export（即時讀取）</td></tr>
+            <tr><td>PDF 引擎</td><td>Playwright（Chromium headless）</td><td>瀏覽器列印</td></tr>
             <tr><td>圖片來源</td><td>Google Drive 下載到本地</td><td>Google Drive API + Service Account</td></tr>
-            <tr><td>操作方式</td><td>CLI 指令</td><td>Web UI（Dashboard + Preview）</td></tr>
-            <tr><td>部署</td><td>本地執行</td><td>Vercel（GitHub push 自動部署）</td></tr>
-            <tr><td>產品數</td><td>8 個（手動建 JSON）</td><td>50+ 個（自動從 Sheets 讀取）</td></tr>
+            <tr><td>操作方式</td><td>CLI 指令（需安裝環境）</td><td>Web UI（瀏覽器直接用）</td></tr>
+            <tr><td>部署</td><td>本地執行</td><td>Vercel（push 自動部署）</td></tr>
+            <tr><td>產品數</td><td>8 個</td><td>50+ 個</td></tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <!-- V3 Section 2: 怎麼做的 -->
+    <section class="section" id="v3s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">怎麼做的</h2>
+      </div>
+
+      <p>V3 從頭重建，用 Flask 做後端、Jinja2 做模板、Pydantic 做資料驗證，部署到 Vercel。資料直接從 Google Sheets 讀取，圖片透過 Google Drive API 代理。</p>
+
+      <div class="tech-row">
+        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Flask</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#B41717"></span>Jinja2</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#E8503A"></span>Pydantic</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#34A853"></span>Google Sheets</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#000"></span>Vercel</span>
+        <span class="tech-pill"><span class="tech-dot" style="background:#4285F4"></span>Google Drive API</span>
       </div>
 
       <div class="subsection">
@@ -1300,147 +1278,88 @@ python generate_datasheet.py ECW220
 <span class="tq">V3 資料流</span>
 │
 ├── <span class="tc">Google Sheets（3 個試算表）</span>
-│   ├── Cloud Camera Sheet  <span class="ta">→ CSV export</span>
+│   ├── Cloud Camera Sheet  <span class="ta">→ CSV export（不需 API key）</span>
 │   ├── Cloud AP Sheet      <span class="ta">→ CSV export</span>
 │   └── Cloud Switch Sheet  <span class="ta">→ CSV export</span>
 │
-├── <span class="tc">Flask App (app.py)</span>
-│   ├── sheets_reader.py    <span class="ta">← 解析 CSV，處理不同格式</span>
-│   ├── pdf_generator.py    <span class="ta">← Jinja2 渲染 HTML</span>
-│   └── drive_images.py     <span class="ta">← Google Drive 圖片代理</span>
+├── <span class="tc">Flask App</span>
+│   ├── sheets_reader.py    <span class="ta">← 解析 CSV，處理三種不同格式</span>
+│   ├── pdf_generator.py    <span class="ta">← Jinja2 渲染 HTML datasheet</span>
+│   └── drive_images.py     <span class="ta">← Google Drive 圖片代理（Service Account）</span>
 │
 ├── <span class="tc">Web UI</span>
-│   ├── Dashboard            <span class="ta">← 產品列表 + 分頁籤</span>
-│   ├── Product Page         <span class="ta">← 規格摘要 + Save as PDF</span>
-│   └── Preview              <span class="ta">← 完整 HTML DataSheet</span>
+│   ├── Dashboard            <span class="ta">← 全部產品列表，按產品線分頁籤</span>
+│   ├── Product Page         <span class="ta">← 單一產品規格摘要 + Save as PDF</span>
+│   └── Preview              <span class="ta">← 完整 HTML DataSheet（即印即存）</span>
 │
-└── <span class="tc">Vercel 部署</span>
-    └── datasheet-system.vercel.app
+└── <span class="tc">Vercel</span>
+    └── GitHub push → 自動部署 → datasheet-system.vercel.app
       </div>
 
       <div class="subsection">
-        <div class="subsection-label">Google Sheets 格式差異（最大挑戰）</div>
+        <div class="subsection-label">Google Sheets 讀取方式</div>
       </div>
 
-      <p>三條產品線的 Google Sheet 結構看似相似，實際上格式完全不同。這是 V3 開發中最耗時的部分：</p>
+      <p>Google Sheets 有提供 CSV export 的公開 URL，只要試算表設為「任何人可檢視」，就能用 HTTP GET 直接拿到 CSV，不需要 Google API key 也不需要 OAuth。每條產品線有自己的 Google Sheet，裡面有兩個 tab：<code>Detail Specs</code>（規格表）和 <code>Web Overview</code>（產品描述）。</p>
+
+      <div class="subsection">
+        <div class="subsection-label">產品圖片怎麼來</div>
+      </div>
+
+      <p>產品圖片存在 Google Drive 共用資料夾，用 Service Account 透過 Drive API 讀取。每個產品有固定命名規則：<code>{型號}_product.png</code>（封面主圖）和 <code>{型號}_hardware.png</code>（硬體概覽圖）。Flask 做 proxy，前端直接用 <code>/drive-image/...</code> 路徑取得圖片。</p>
+
+      <div class="subsection">
+        <div class="subsection-label">HTML 模板與 PDF 比對</div>
+      </div>
+
+      <p>DataSheet 的 HTML 模板是照著設計師提供的 PDF 範本逆向工程出來的。每個元素的尺寸、顏色、間距都從 PDF 用 PyMuPDF + Pillow 像素取樣比對，確保跟原始設計一致。V2 就建好的 cameras.html 模板在 V3 繼續沿用，目前三條產品線共用同一個模板。</p>
+    </section>
+
+    <!-- V3 Section 3: 遇到的困難 -->
+    <section class="section" id="v3s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">遇到的困難</h2>
+      </div>
+
+      <div class="subsection">
+        <div class="subsection-label">1. 三條產品線的 Google Sheet 格式完全不同</div>
+      </div>
+
+      <p>這是 V3 開發中最耗時的問題。雖然三條產品線的 Sheet 看起來結構類似，但實際上每個 Sheet 的格式都不一樣：features 的分隔符號不同、欄位名稱不同、規格分類的方式也不同。Camera 先做好可以正常跑，接上 Switch 和 AP 之後全部爛掉——features 回傳 0 筆、specs 也是 0 筆。</p>
 
       <div class="table-wrap">
         <table>
           <thead><tr><th>差異項</th><th>Camera</th><th>Switch</th><th>AP</th></tr></thead>
           <tbody>
             <tr><td>Features 格式</td><td><code>* feature text</code></td><td><code>- feature text</code></td><td>純文字換行</td></tr>
-            <tr><td>Overview 欄位</td><td>Single Overview</td><td>Highlights/Single Overview</td><td>Highlights/Single Overview</td></tr>
-            <tr><td>產品描述</td><td>Model Description</td><td>Excerpt (Headline)</td><td>Excerpt (Headline)</td></tr>
-            <tr><td>規格分類</td><td>明確 category 名稱</td><td>空值行當分隔線</td><td>混合使用</td></tr>
+            <tr><td>Overview 欄位名</td><td>Single Overview</td><td>Highlights/Single Overview</td><td>Highlights/Single Overview</td></tr>
+            <tr><td>產品描述欄位名</td><td>Model Description</td><td>Excerpt (Headline)</td><td>Excerpt (Headline)</td></tr>
+            <tr><td>規格分類方式</td><td>明確的 category 名稱</td><td>用空值行當分隔線</td><td>混合使用</td></tr>
           </tbody>
         </table>
       </div>
 
+      <p><strong>怎麼解決的：</strong>解析器改成同時處理 <code>*</code>、<code>-</code>、純文字三種 feature 格式。新增「空值行自動偵測為 category header」的邏輯——如果某一行的所有產品欄都是空值，就判定為規格分類的分隔線。欄位名則用多個候選名稱逐一嘗試匹配。</p>
+
       <div class="callout callout-tip">
         <span class="callout-icon">→</span>
-        <div><strong>解決方式：</strong>解析器同時處理 <code>*</code>、<code>-</code>、純文字三種 feature 格式；新增空值行自動偵測為 category header；用多個候選欄位名逐一嘗試匹配。</div>
-      </div>
-    </section>
-
-    <!-- V3 Section 2: 踩坑紀錄 -->
-    <section class="section" id="v3s2">
-      <div class="section-header">
-        <span class="section-num">02</span>
-        <h2 class="section-title">踩坑紀錄（V3）</h2>
+        <div><strong>學到的事：</strong>串接新的資料源之前，一定要先印出 raw data 看實際結構。同一家公司、同一個團隊維護的三個 Sheet，格式可以完全不一樣。</div>
       </div>
 
-      <div class="bug-block">
-        <div class="bug-header">
-          <span class="bug-icon">⚠</span>
-          <span class="bug-title">Bug：WeasyPrint macOS SIP 限制</span>
-        </div>
-        <div class="bug-body">
-          <div class="callout callout-note">
-            <span class="callout-icon">!</span>
-            <div><strong>症狀：</strong><code>OSError: cannot load library 'libgobject-2.0-0'</code></div>
-          </div>
-          <p><strong>根本原因：</strong>macOS 系統 Python 3.9 因 SIP（System Integrity Protection）限制，無法動態載入 Homebrew 安裝的 C 函式庫。</p>
-          <p><strong>解法：</strong>用 Homebrew Python 3.14 建立 venv：<code>.venv/bin/python</code></p>
-          <div class="callout callout-tip">
-            <span class="callout-icon">→</span>
-            <div><strong>預防：</strong>macOS 上使用需要原生 C 函式庫的 Python 套件時，一律用 Homebrew Python 建 venv。</div>
-          </div>
-        </div>
+      <div class="subsection">
+        <div class="subsection-label">2. Vercel 跑不了 Playwright</div>
       </div>
 
-      <div class="bug-block">
-        <div class="bug-header">
-          <span class="bug-icon">⚠</span>
-          <span class="bug-title">Bug：Google Sheets 各產品線格式不一致</span>
-        </div>
-        <div class="bug-body">
-          <div class="callout callout-note">
-            <span class="callout-icon">!</span>
-            <div><strong>症狀：</strong>Switch 和 AP 的 features 回傳 0 筆、specs 也回傳 0 筆，但 Camera 正常。</div>
-          </div>
-          <p><strong>根本原因：</strong>Camera 用 <code>* </code> 分隔 features，Switch 用 <code>- </code>，AP 純文字換行。Switch 的 category headers 用空值行當分隔線，不在已知的 <code>SPEC_CATEGORIES</code> 集合中。</p>
-          <p><strong>解法：</strong>解析器改成同時處理三種格式；新增空值行自動偵測邏輯；擴充 <code>SPEC_CATEGORIES</code> 集合。</p>
-          <div class="callout callout-tip">
-            <span class="callout-icon">→</span>
-            <div><strong>預防：</strong>串接新的 Google Sheet 前，先用 <code>_fetch_csv()</code> 印出前 20 行看結構，不要假設格式跟現有的一樣。</div>
-          </div>
-        </div>
+      <p>V2 用 Playwright（headless Chromium）產 PDF，品質跟 HTML 完全一致。但 Playwright 打包後超過 250MB，超過 Vercel 的 serverless function 限制。WeasyPrint 也不行，因為它需要原生 C 函式庫，Vercel 的環境不支援。</p>
+
+      <p>最後 V3 退而求其次，改用瀏覽器的列印功能讓使用者自己存 PDF。但這帶來了下一個問題。</p>
+
+      <div class="subsection">
+        <div class="subsection-label">3. 瀏覽器存出來的 PDF 跟 HTML 預覽長不一樣</div>
       </div>
 
-      <div class="bug-block">
-        <div class="bug-header">
-          <span class="bug-icon">⚠</span>
-          <span class="bug-title">Bug：Vercel deploy blocked</span>
-        </div>
-        <div class="bug-body">
-          <div class="callout callout-note">
-            <span class="callout-icon">!</span>
-            <div><strong>症狀：</strong>"The Deployment was blocked because GitHub could not associate the committer with a GitHub user"</div>
-          </div>
-          <p><strong>根本原因：</strong>Git commit email 不對應 GitHub 帳號，Vercel 的 GitHub integration 會拒絕部署。</p>
-          <p><strong>解法：</strong><code>git config user.email "194753981+lululi2025@users.noreply.github.com"</code> 或用 <code>vercel deploy --prod --yes</code> CLI 直接部署繞過。</p>
-        </div>
-      </div>
-
-      <div class="bug-block">
-        <div class="bug-header">
-          <span class="bug-icon">⚠</span>
-          <span class="bug-title">Bug：UTF-8 亂碼</span>
-        </div>
-        <div class="bug-body">
-          <div class="callout callout-note">
-            <span class="callout-icon">!</span>
-            <div><strong>症狀：</strong>規格值出現 <code>Â°</code> 而非 <code>°</code>，<code>â</code> 而非 <code>″</code></div>
-          </div>
-          <p><strong>根本原因：</strong>Google Sheets CSV export 的 encoding 問題，<code>resp.text</code> 可能用錯誤的編碼解碼。</p>
-          <p><strong>解法：</strong>明確使用 <code>resp.content.decode("utf-8")</code> 而非 <code>resp.text</code>。</p>
-        </div>
-      </div>
-
-      <div class="bug-block">
-        <div class="bug-header">
-          <span class="bug-icon">⚠</span>
-          <span class="bug-title">Bug：PDF ≠ HTML 預覽（待解）</span>
-        </div>
-        <div class="bug-body">
-          <div class="callout callout-note">
-            <span class="callout-icon">!</span>
-            <div><strong>症狀：</strong>瀏覽器存成 PDF 後，背景色消失、邊距不對、分頁斷裂。</div>
-          </div>
-          <p><strong>根本原因：</strong>瀏覽器列印功能會自動加 header/footer、調整邊距、預設不印背景色。使用者需要手動勾選「背景圖形」並取消勾選「頁首頁尾」，體驗不佳。</p>
-          <p><strong>狀態：</strong>待解。計畫改用 html2pdf.js（客戶端截圖式）或外部 PDF API。詳見下一章節的方案評估。</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- V3 Section 3: PDF 方案評估 -->
-    <section class="section" id="v3s3">
-      <div class="section-header">
-        <span class="section-num">03</span>
-        <h2 class="section-title">PDF 輸出方案評估</h2>
-      </div>
-
-      <p>V3 目前用瀏覽器列印存 PDF，跟 HTML 預覽有差異。以下是評估過的替代方案：</p>
+      <p>瀏覽器列印會自動加 header/footer、調整邊距，而且預設不印背景色。使用者必須手動勾選「背景圖形」、取消勾選「頁首頁尾」才能存出正確的 PDF，體驗很差。這個問題目前還沒解決，以下是評估過的替代方案：</p>
 
       <div class="route-grid">
         <div class="route-card featured">
@@ -1449,7 +1368,7 @@ python generate_datasheet.py ECW220
           <div class="route-title">html2pdf.js</div>
           <div class="route-subtitle">客戶端截圖式 PDF</div>
           <div class="route-pros-label">PROS</div>
-          <div class="route-pros">跟預覽完全一致、免費、不需後端、可在 Vercel 用</div>
+          <div class="route-pros">跟預覽完全一致、免費、不需後端</div>
           <div class="route-cons-label">CONS</div>
           <div class="route-cons">文字不可選取、大檔案較慢</div>
         </div>
@@ -1458,18 +1377,18 @@ python generate_datasheet.py ECW220
           <div class="route-title">PDFShift / DocRaptor</div>
           <div class="route-subtitle">Server-side 精確渲染</div>
           <div class="route-pros-label">PROS</div>
-          <div class="route-pros">文字可選取、品質最高、跟預覽一致</div>
+          <div class="route-pros">文字可選取、品質最高</div>
           <div class="route-cons-label">CONS</div>
           <div class="route-cons">有成本（免費額度有限）</div>
         </div>
         <div class="route-card">
           <div class="route-tag">SELF-HOSTED</div>
-          <div class="route-title">Railway + Playwright</div>
-          <div class="route-subtitle">完全自主控制</div>
+          <div class="route-title">換平台跑 Playwright</div>
+          <div class="route-subtitle">Railway / Fly.io / Cloud Run</div>
           <div class="route-pros-label">PROS</div>
-          <div class="route-pros">品質最高、完全一致、文字可選取</div>
+          <div class="route-pros">品質最高、完全一致</div>
           <div class="route-cons-label">CONS</div>
-          <div class="route-cons">需換部署平台、Docker 設定、不再免費</div>
+          <div class="route-cons">需換部署平台、不再免費</div>
         </div>
       </div>
 
@@ -1480,8 +1399,8 @@ python generate_datasheet.py ECW220
     ├── <span class="tq">文字要可選取嗎？</span>
     │   ├── <span class="ta">不需要</span> → html2pdf.js（免費，最簡單）
     │   └── <span class="tq">需要</span>
-    │       ├── <span class="ta">預算有限</span> → PDFShift 免費額度（每月 50 份）
-    │       └── <span class="ta">量大或要自主</span> → Railway + Playwright
+    │       ├── <span class="ta">預算有限</span> → PDFShift 免費額度
+    │       └── <span class="ta">量大或要自主</span> → 換平台跑 Playwright
       </div>
     </section>
 
@@ -1493,50 +1412,31 @@ python generate_datasheet.py ECW220
       </div>
 
       <div class="takeaway">
-        <div class="takeaway-label">V3 的核心轉折</div>
-        <p>V3 的重心從<strong>「PDF 品質」轉到「使用者體驗」</strong>。V2 是開發者工具，V3 是團隊自助工具。最大的挑戰不是技術本身，而是三條產品線的 Google Sheet 格式完全不統一，解析器需要足夠彈性來處理各種邊界情況。</p>
+        <div class="takeaway-label">核心轉折</div>
+        <p>V2 的重心是<strong>「PDF 品質」</strong>——用 Playwright 精確還原設計師的排版。V3 的重心轉到<strong>「使用者體驗」</strong>——讓不懂技術的同事也能自己操作。從開發者工具變成團隊自助工具，這個轉變影響了所有技術決策。</p>
       </div>
 
       <div class="takeaway">
-        <div class="takeaway-label">Web 部署的關鍵學習</div>
+        <div class="takeaway-label">關鍵學習</div>
         <div class="matrix-row">
-          <span class="matrix-key">Vercel 限制</span>
+          <span class="matrix-key">平台限制</span>
           <span class="matrix-arrow">→</span>
-          <span>不支援原生 C 函式庫（WeasyPrint）和大型套件（Playwright >250MB），PDF 方案受限</span>
+          <span>Vercel 免費好用，但不支援原生 C 函式庫和大型套件，PDF 方案會受限</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">CSV over API</span>
+          <span class="matrix-key">資料格式</span>
           <span class="matrix-arrow">→</span>
-          <span>Google Sheets CSV export 免 API key、免 OAuth，適合公開讀取的場景</span>
+          <span>同一家公司的三個 Sheet 格式可以完全不同，解析器要夠彈性</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">格式不統一</span>
+          <span class="matrix-key">CSV 讀取</span>
           <span class="matrix-arrow">→</span>
-          <span>同一家公司的三個 Sheet 格式完全不同，永遠不要假設「格式應該一樣」</span>
+          <span>Google Sheets CSV export 免 API key，適合公開讀取的場景，是最輕量的串接方式</span>
         </div>
         <div class="matrix-row">
-          <span class="matrix-key">Git 身份驗證</span>
+          <span class="matrix-key">先求能用</span>
           <span class="matrix-arrow">→</span>
-          <span>Vercel GitHub integration 會驗證 commit email，必須對應 GitHub 帳號</span>
-        </div>
-      </div>
-
-      <div class="takeaway">
-        <div class="takeaway-label">多格式資料處理的教訓</div>
-        <div class="matrix-row">
-          <span class="matrix-key">先看資料</span>
-          <span class="matrix-arrow">→</span>
-          <span>串接新資料源前，先印出 raw data 看結構，不要假設格式</span>
-        </div>
-        <div class="matrix-row">
-          <span class="matrix-key">防禦性解析</span>
-          <span class="matrix-arrow">→</span>
-          <span>用多個候選欄位名嘗試匹配，而非硬編碼單一欄位名</span>
-        </div>
-        <div class="matrix-row">
-          <span class="matrix-key">明確 encoding</span>
-          <span class="matrix-arrow">→</span>
-          <span>永遠用 <code>resp.content.decode("utf-8")</code>，不要相信 <code>resp.text</code> 的自動偵測</span>
+          <span>PDF 品質暫時不完美沒關係，先讓同事能用比什麼都重要</span>
         </div>
       </div>
     </section>
